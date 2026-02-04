@@ -3,8 +3,8 @@ layout: home
 permalink: index.html
 
 # Please update this with your repository name and project title
-repository-name: eYY-co2060-project-template
-title: Project Template
+repository-name: eYY-co2060-MediTriage
+title: MediTriage
 ---
 
 [comment]: # "This is the standard layout for the project, but you can clean this and use your own template, and add more information required for your own project"
@@ -24,9 +24,10 @@ A HTML template integrated with the given GitHub repository templates, based on 
 ---
 
 ## Team
--  eNumber, Name, [email](mailto:name@email.com)
--  eNumber, Name, [email](mailto:name@email.com)
--  eNumber, Name, [email](mailto:name@email.com)
+-  E/22/044, D.M.N.N. Bandara, [e22044@eng.pdn.ac.lk](mailto:e22044@eng.pdn.ac.lk)
+-  E/22/102, A.K. Gamage, [e22102@eng.pdn.ac.lk](mailto:e22102@eng.pdn.ac.lk)
+-  E/22/010, A.A.D.I. Adikari, [e22010@eng.pdn.ac.lk](mailto:e22010@eng.pdn.ac.lk)
+-  E/22/211, H.M. Liyanage, [e22211@eng.pdn.ac.lk](mailto:e22211@eng.pdn.ac.lk)
 
 <!-- Image (photo/drawing of the final hardware) should be here -->
 
@@ -44,24 +45,26 @@ A HTML template integrated with the given GitHub repository templates, based on 
 
 ## Introduction
 
-Description of the real world problem and solution, impact
+Outpatient Departments (OPD) and Wards face significant bottlenecks because doctors spend the initial 5-10 minutes of every consultation gathering basic patient history. This reduces the time available for actual diagnosis and treatment.
+
+"Medi-Triage" is an AI-powered, staff-assisted pre-consultation tool. It empowers hospital staff (e.g., nurses) to interview patients efficiently using an AI guide. The system supports hybrid input (Text & Voice), allowing the nurse to verify the input before converting the conversation into a draft structured medical summary (SOAP Note).
 
 
 ## Solution Architecture
 
-High level diagram + description
+
 
 ## Software Designs
 
-Detailed designs with many sub-sections
+
 
 ## Testing
 
-Testing done on software : detailed + summarized results
+
 
 ## Conclusion
 
-What was achieved, future developments, commercialization plans
+
 
 ## Links
 
