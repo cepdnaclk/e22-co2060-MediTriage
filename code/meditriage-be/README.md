@@ -14,7 +14,7 @@ This is the backend API for **Medi-Triage**, an AI-powered clinical decision sup
 1. **Clone & Navigate:**
    ```bash
    git clone <repo-url>
-   cd medi-triage-backend
+   cd meditriage-be
    ```
 
 2. **Create Virtual Environment:**
