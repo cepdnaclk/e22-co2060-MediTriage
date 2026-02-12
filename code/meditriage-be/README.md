@@ -40,17 +40,16 @@ This is the backend API for **Medi-Triage**, an AI-powered clinical decision sup
 
    # Database (Local PostgreSQL)
    POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=yourpassword
+   POSTGRES_PASSWORD=<---your-password-here--->
    POSTGRES_SERVER=localhost
    POSTGRES_PORT=5432
-   POSTGRES_DB=meditriage_dev
+   POSTGRES_DB=meditriage
 
-   # AI Services (Get Key from OpenAI/Google)
-   OPENAI_API_KEY=sk-proj-...
-   # GEMINI_API_KEY=... (If switching providers)
+   # AI Services
+   DEEPSEEK_API_KEY=<---your-API-key-here--->
 
    # Security (Generate a random string: openssl rand -hex 32)
-   SECRET_KEY=supersecretkeyrequiredforjwttokens
+   SECRET_KEY=<---Your-secret-key-here--->    
    ```
 
 ## Running the Server
