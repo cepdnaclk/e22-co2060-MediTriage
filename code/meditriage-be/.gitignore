@@ -57,3 +57,6 @@ htmlcov/
 
 # Alembic
 versions/
+
+# Postman Collections (local testing only)
+postman/
