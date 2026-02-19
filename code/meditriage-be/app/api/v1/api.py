@@ -1,13 +1,18 @@
 """
-API v1 router — aggregates all endpoint routers.
+API v1 router — aggregates all controller routers.
 """
 from fastapi import APIRouter
-from app.api.v1.endpoints import triage, auth, patients, users
+from app.api.v1.controllers import (
+    auth_controller,
+    triage_controller,
+    patient_controller,
+    user_controller,
+)
 
 api_router = APIRouter()
 
-# Register endpoint routers
-api_router.include_router(auth.router)
-api_router.include_router(triage.router)
-api_router.include_router(patients.router)
-api_router.include_router(users.router)
+# Register controller routers
+api_router.include_router(auth_controller.router)
+api_router.include_router(triage_controller.router)
+api_router.include_router(patient_controller.router)
+api_router.include_router(user_controller.router)

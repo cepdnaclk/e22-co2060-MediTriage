@@ -49,6 +49,7 @@ def create_patient(data: PatientCreate, db: Session) -> Patient:
             first_name=data.first_name,
             last_name=data.last_name,
             date_of_birth=data.date_of_birth,
+            gender=data.gender,
             contact_number=data.contact_number,
         )
         db.add(patient)

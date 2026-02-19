@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime, date
 from typing import Optional, List
+from app.models.patient import Gender
 
 
 class PatientCreate(BaseModel):
@@ -14,6 +15,7 @@ class PatientCreate(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100, description="First name")
     last_name: str = Field(..., min_length=1, max_length=100, description="Last name")
     date_of_birth: date = Field(..., description="Date of birth")
+    gender: Optional[Gender] = Field(None, description="Gender (MALE, FEMALE, OTHER)")
     contact_number: Optional[str] = Field(None, max_length=20, description="Contact phone number")
 
 
@@ -22,6 +24,7 @@ class PatientUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     date_of_birth: Optional[date] = None
+    gender: Optional[Gender] = None
     contact_number: Optional[str] = Field(None, max_length=20)
 
 
@@ -32,6 +35,7 @@ class PatientResponse(BaseModel):
     first_name: str
     last_name: str
     date_of_birth: date
+    gender: Optional[Gender]
     contact_number: Optional[str]
     created_at: datetime
     updated_at: datetime

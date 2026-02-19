@@ -1,5 +1,5 @@
 """
-Authentication API endpoints.
+Authentication API controller.
 Handles user registration, login, and current user retrieval.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -31,15 +31,15 @@ def register(
     """
     Register a new user account.
     Creates both User and Auth records.
-    
+
     Returns:
         Created user data (without password)
     """
     logger.info(f"Registration attempt for username: {data.username}")
     user = auth_service.register_user(data, db)
-    
+
     logger.info(f"User registered successfully: user_id={user.id}, username={data.username}, role={user.role.value}")
-    
+
     # Return user data with auth info
     return UserResponse(
         id=user.id,
@@ -60,13 +60,13 @@ def login(
 ):
     """
     Authenticate user and return JWT access token.
-    
+
     Returns:
         JWT access token
     """
     logger.info(f"Login attempt for username: {data.username}")
     user = auth_service.authenticate_user(data.username, data.password, db)
-    
+
     if not user:
         logger.warning(f"Failed login attempt for username: {data.username}")
         raise HTTPException(
@@ -74,16 +74,16 @@ def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     logger.info(f"User authenticated successfully: user_id={user.id}, username={data.username}")
-    
+
     # Create JWT token with user_id and role
     access_token = create_access_token(
         data={"sub": str(user.id), "role": user.role.value}
     )
-    
+
     logger.debug(f"JWT token generated for user_id={user.id}")
-    
+
     return TokenResponse(access_token=access_token, token_type="bearer")
 
 
@@ -94,7 +94,7 @@ def get_current_user_info(
     """
     Get current authenticated user information.
     Requires valid JWT token in Authorization header.
-    
+
     Returns:
         Current user data
     """
@@ -120,16 +120,16 @@ def update_own_profile(
     """
     Update own user profile.
     Allows updating display name and license number.
-    
+
     **Required**: Any authenticated user
     """
     logger.info(f"User updating own profile: user_id={current_user.id}, username={current_user.auth.username}")
-    
+
     # Use user service to update profile
     updated_user = user_service.update_user_profile(current_user.id, data, db)
-    
+
     logger.info(f"Profile updated successfully: user_id={current_user.id}")
-    
+
     return UserResponse(
         id=updated_user.id,
         username=updated_user.auth.username,

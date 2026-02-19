@@ -1,5 +1,5 @@
 """
-Patient management API endpoints.
+Patient management API controller.
 Handles patient CRUD operations, search, and encounter history.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -35,7 +35,7 @@ def create_patient(
     """
     Register a new patient.
     Checks for duplicate national ID.
-    
+
     **Required Role**: Nurse or Admin
     """
     logger.info(f"Creating patient: nic={data.national_id}, user={current_user.full_name}")
@@ -53,7 +53,7 @@ def search_patients(
     """
     Search for patients by national ID (exact) or name (partial).
     At least one search parameter must be provided.
-    
+
     **Required Role**: Nurse or Doctor
     """
     if not nic and not name:
@@ -61,7 +61,7 @@ def search_patients(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one search parameter (nic or name) must be provided"
         )
-    
+
     logger.info(f"Searching patients: nic={nic}, name={name}, user={current_user.full_name}")
     patients = patient_service.search_patients(nic=nic, name=name, db=db)
     return patients
@@ -75,7 +75,7 @@ def get_patient(
 ):
     """
     Get patient details by ID.
-    
+
     **Required Role**: Nurse or Doctor
     """
     logger.debug(f"Fetching patient: id={patient_id}, user={current_user.full_name}")
@@ -92,7 +92,7 @@ def update_patient(
 ):
     """
     Update patient information.
-    
+
     **Required Role**: Nurse or Admin
     """
     logger.info(f"Updating patient: id={patient_id}, user={current_user.full_name}")
@@ -108,7 +108,7 @@ def delete_patient(
 ):
     """
     Soft delete a patient record.
-    
+
     **Required Role**: Admin only
     """
     logger.warning(f"Deleting patient: id={patient_id}, admin={current_user.full_name}")
@@ -125,7 +125,7 @@ def get_patient_history(
     """
     Get encounter history for a patient.
     Returns summary of all past triage encounters with dates and chief complaints.
-    
+
     **Required Role**: Nurse or Doctor
     """
     logger.info(f"Fetching patient history: id={patient_id}, user={current_user.full_name}")

@@ -4,11 +4,19 @@ Contains demographics and contact information.
 Clinical data is stored separately in medical encounters.
 """
 import uuid
+import enum
 from datetime import datetime, date
-from sqlalchemy import Column, String, Date, DateTime
+from sqlalchemy import Column, String, Date, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from .base import Base
+
+
+class Gender(str, enum.Enum):
+    """Administrative gender options."""
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+    PREFER_NOT_TO_SAY = "PREFER_NOT_TO_SAY"
 
 
 class Patient(Base):
@@ -28,6 +36,7 @@ class Patient(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     date_of_birth = Column(Date, nullable=False)
+    gender = Column(Enum(Gender), nullable=True)
 
     # Contact
     contact_number = Column(String(20), nullable=True)

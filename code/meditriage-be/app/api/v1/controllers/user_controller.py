@@ -1,5 +1,5 @@
 """
-User/Staff management API endpoints.
+User/Staff management API controller.
 Handles staff listing and account management (Admin functions).
 """
 from fastapi import APIRouter, Depends, Query, status
@@ -28,7 +28,7 @@ def list_users(
     """
     Get paginated list of all staff members.
     For admin dashboard.
-    
+
     **Required Role**: Admin only
     """
     logger.info(f"Listing users: skip={skip}, limit={limit}, admin={current_user.full_name}")
@@ -45,7 +45,7 @@ def deactivate_user(
     """
     Soft delete (deactivate) a staff account.
     Sets auth.is_active = False.
-    
+
     **Required Role**: Admin only
     """
     logger.warning(f"Deactivating user: id={user_id}, admin={current_user.full_name}")

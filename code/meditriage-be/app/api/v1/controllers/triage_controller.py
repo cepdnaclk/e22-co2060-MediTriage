@@ -1,5 +1,5 @@
 """
-Enhanced Triage interview API endpoints.
+Enhanced Triage interview API controller.
 Thin controller layer — delegates to triage_engine and encounter_service.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -38,7 +38,7 @@ async def start_triage_interview(
     """
     Start a new triage interview for a medical encounter.
     Returns the AI's initial greeting question.
-    
+
     **Required Role**: Nurse
     """
     logger.info(f"Starting triage interview for encounter_id={request.encounter_id}, nurse={current_user.full_name}")
@@ -64,19 +64,19 @@ async def triage_chat(
     Process a triage interview message.
     Sends patient response to AI and returns the next question.
     When the interview is complete, returns a SOAP note draft.
-    
+
     **Required Role**: Nurse
     """
     logger.debug(f"Processing chat message for encounter_id={request.encounter_id}")
     try:
         response = await triage_engine.process_message(request, db)
-        
+
         if response.is_interview_complete:
             logger.info(f"Triage interview completed for encounter_id={request.encounter_id}, SOAP note generated")
         else:
             logger.debug(f"Chat message processed for encounter_id={request.encounter_id}")
-        
-        return response 
+
+        return response
     except ValueError as e:
         logger.error(f"Encounter not found or invalid: encounter_id={request.encounter_id}, error={str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -94,14 +94,14 @@ def get_encounter_messages(
     """
     Get full chat history for an encounter.
     Useful for reloading conversation on page refresh.
-    
+
     **Required Role**: Nurse or Doctor
     """
     logger.info(f"Fetching messages for encounter_id={encounter_id}, user={current_user.full_name}")
-    
+
     try:
         encounter, interactions = encounter_service.get_encounter_with_messages(encounter_id, db)
-        
+
         # Convert to response format
         messages = [
             MessageResponse(
@@ -113,10 +113,10 @@ def get_encounter_messages(
             )
             for msg in interactions
         ]
-        
+
         logger.debug(f"Retrieved {len(messages)} messages for encounter_id={encounter_id}")
         return messages
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -137,11 +137,11 @@ def update_encounter_urgency(
     """
     Update encounter urgency status.
     Allows nurse to manually flag urgent cases.
-    
+
     **Required Role**: Nurse
     """
     logger.info(f"Updating encounter urgency: encounter_id={encounter_id}, is_urgent={data.is_urgent}, nurse={current_user.full_name}")
-    
+
     try:
         if data.is_urgent is not None:
             encounter = encounter_service.update_encounter_urgency(encounter_id, data.is_urgent, db)
@@ -169,19 +169,19 @@ def get_clinical_note(
 ):
     """
     Get clinical note (SOAP) for an encounter.
-    
+
     **Required Role**: Nurse or Doctor
     """
     logger.info(f"Fetching clinical note for encounter_id={encounter_id}, user={current_user.full_name}")
-    
+
     note = encounter_service.get_clinical_note(encounter_id, db)
-    
+
     if not note:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Clinical note for encounter {encounter_id} not found"
         )
-    
+
     return note
 
 
@@ -195,11 +195,11 @@ def update_clinical_note(
     """
     Update clinical note (Doctor edits/approves AI draft).
     Increments version and can finalize the note.
-    
+
     **Required Role**: Doctor only
     """
     logger.info(f"Doctor updating clinical note: encounter_id={encounter_id}, doctor={current_user.full_name}")
-    
+
     try:
         note = encounter_service.update_clinical_note(encounter_id, data, current_user, db)
         return note
