@@ -51,7 +51,7 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
    const [department, setDepartment] = useState('Emergency / OPD');
 
    // Data State
-   const [formData, setFormData] = useState({ name: '', age: '', gender: '', complaint: '' });
+   const [formData, setFormData] = useState({ firstName: '', lastName: '', birthYear: '', birthMonth: '', birthDay: '', gender: '', complaint: '' });
    const [messages, setMessages] = useState<Message[]>([]);
    const [chatInput, setChatInput] = useState('');
    const [isTyping, setIsTyping] = useState(false);
@@ -64,7 +64,7 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
 
    // Handlers
    const openAdmitModal = () => {
-      setFormData({ name: '', age: '', gender: '', complaint: '' });
+      setFormData({ firstName: '', lastName: '', birthYear: '', birthMonth: '', birthDay: '', gender: '', complaint: '' });
       setEditingCaseId(null);
       setIsAdmitModalOpen(true);
    };
@@ -78,14 +78,18 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
 
       try {
          // 1. Create Patient
-         const nameParts = formData.name.trim().split(' ');
-         const lastName = nameParts.length > 1 ? nameParts.pop() || '' : 'Unknown';
-         const firstName = nameParts.join(' ') || formData.name;
+         const firstName = formData.firstName.trim();
+         const lastName = formData.lastName.trim();
 
-         // Calculate rough DOB from age
-         const age = parseInt(formData.age) || 30;
-         const birthYear = new Date().getFullYear() - age;
-         const dob = `${birthYear}-01-01`;
+         // Construct DOB
+         const monthMap: { [key: string]: string } = {
+            'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+            'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+         };
+         const month = monthMap[formData.birthMonth] || '01';
+         const day = formData.birthDay.padStart(2, '0') || '01';
+         const year = formData.birthYear || '1990';
+         const dob = `${year}-${month}-${day}`;
 
          const patient = await patientService.createPatient({
             national_id: `NIC-${Date.now().toString().slice(-6)}`,
@@ -178,9 +182,18 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
 
    const handleEditPatient = async (patient: PatientCase) => {
       setEditingCaseId(patient.id);
+
+      const nameParts = patient.patientName.trim().split(' ');
+      const lastName = nameParts.length > 1 ? nameParts.pop() || '' : '';
+      const firstName = nameParts.join(' ');
+      const birthYear = (new Date().getFullYear() - parseInt(patient.age || '30')).toString();
+
       setFormData({
-         name: patient.patientName,
-         age: patient.age.toString(),
+         firstName,
+         lastName,
+         birthYear,
+         birthMonth: 'January',
+         birthDay: '1',
          gender: patient.gender,
          complaint: patient.chiefComplaint
       });
@@ -227,8 +240,8 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
          if (originalCase) {
             const updatedCase: PatientCase = {
                ...originalCase,
-               patientName: formData.name,
-               age: formData.age,
+               patientName: `${formData.firstName} ${formData.lastName}`,
+               age: formData.birthYear ? (new Date().getFullYear() - parseInt(formData.birthYear)).toString() : originalCase.age,
                gender: formData.gender,
                chiefComplaint: formData.complaint,
                status: generatedSoap.urgency === 'RED' ? TriageStatus.URGENT : originalCase.status,
@@ -247,8 +260,8 @@ const NurseDashboard: React.FC<NurseDashboardProps> = ({ user, cases, onAddCase,
 
          const newCase: PatientCase = {
             id: newId,
-            patientName: formData.name,
-            age: formData.age,
+            patientName: `${formData.firstName} ${formData.lastName}`,
+            age: formData.birthYear ? (new Date().getFullYear() - parseInt(formData.birthYear)).toString() : '30',
             gender: formData.gender,
             chiefComplaint: formData.complaint,
             nurseId: user.id,

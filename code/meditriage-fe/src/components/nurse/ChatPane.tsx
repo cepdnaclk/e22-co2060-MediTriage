@@ -9,7 +9,7 @@ interface ChatPaneProps {
     onSendMessage: () => void;
     onFinishInterview: () => void;
     onCancelInterview: () => void;
-    formData: { name: string; age: string; gender: string; complaint: string };
+    formData: { firstName: string; lastName: string; birthYear: string; birthMonth: string; birthDay: string; gender: string; complaint: string };
 }
 
 const ChatPane: React.FC<ChatPaneProps> = ({
