@@ -56,7 +56,7 @@ class EncounterSummary(BaseModel):
     encounter_timestamp: datetime
     chief_complaint: Optional[str]
     status: str  # EncounterStatus enum value
-    risk_score: Optional[str]  # RiskScore enum value
+    is_urgent: bool  # Nurse-controlled urgency toggle
     nurse_name: str
     doctor_name: Optional[str]
 

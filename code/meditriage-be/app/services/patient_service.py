@@ -216,7 +216,7 @@ def get_patient_encounter_history(patient_id: UUID, db: Session) -> List[Encount
             encounter_timestamp=enc.encounter_timestamp,
             chief_complaint=enc.chief_complaint,
             status=enc.status.value,
-            risk_score=enc.risk_score.value if enc.risk_score else None,
+            is_urgent=enc.is_urgent,
             nurse_name=enc.nurse.full_name if enc.nurse else "Unknown",
             doctor_name=enc.doctor.full_name if enc.doctor else None,
         )
