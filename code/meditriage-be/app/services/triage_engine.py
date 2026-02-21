@@ -11,7 +11,6 @@ from app.models.clinical import (
     TriageInteraction,
     ClinicalNote,
     EncounterStatus,
-    RiskScore,
     SenderType,
 )
 from app.services.llm.chain_factory import TriagePipeline
@@ -187,9 +186,6 @@ async def process_message(
             patient_context=patient_context,
         )
 
-        # Map risk score string to enum
-        risk_map = {"HIGH": RiskScore.HIGH, "MEDIUM": RiskScore.MEDIUM, "LOW": RiskScore.LOW}
-
         # Save clinical note to database
         clinical_note = ClinicalNote(
             encounter_id=encounter.id,
@@ -202,19 +198,17 @@ async def process_message(
         )
         db.add(clinical_note)
 
-        # Update encounter status and risk score
+        # Update encounter status — nurse will set urgency manually
         encounter.status = EncounterStatus.AWAITING_REVIEW
-        encounter.risk_score = risk_map.get(soap_note.risk_score, RiskScore.MEDIUM)
 
         soap_note_schema = SOAPNoteSchema(
             subjective=soap_note.subjective,
             objective=soap_note.objective,
             assessment=soap_note.assessment,
             plan=soap_note.plan,
-            risk_score=soap_note.risk_score,
         )
 
-        logger.info(f"SOAP note created for encounter {encounter.id}, risk: {soap_note.risk_score}")
+        logger.info(f"SOAP note created for encounter {encounter.id}")
 
     db.commit()
 

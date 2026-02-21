@@ -6,6 +6,7 @@ import uuid
 import enum
 from datetime import datetime
 from sqlalchemy import Column, String, Text, Boolean, Integer, Float, DateTime, ForeignKey, Enum as SQLEnum
+
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -16,13 +17,6 @@ class EncounterStatus(enum.Enum):
     TRIAGE_IN_PROGRESS = "TRIAGE_IN_PROGRESS"
     AWAITING_REVIEW = "AWAITING_REVIEW"
     COMPLETED = "COMPLETED"
-
-
-class RiskScore(enum.Enum):
-    """Risk assessment score from triage algorithm"""
-    HIGH = "HIGH"
-    MEDIUM = "MEDIUM"
-    LOW = "LOW"
 
 
 class SenderType(enum.Enum):
@@ -49,7 +43,7 @@ class MedicalEncounter(Base):
 
     # Encounter Details
     status = Column(SQLEnum(EncounterStatus), nullable=False, default=EncounterStatus.TRIAGE_IN_PROGRESS)
-    risk_score = Column(SQLEnum(RiskScore), nullable=True)
+    is_urgent = Column(Boolean, default=False, nullable=False)
     chief_complaint = Column(String(500), nullable=True)
     encounter_timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 

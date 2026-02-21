@@ -63,20 +63,13 @@ PATIENT CONTEXT:
 INSTRUCTIONS:
 1. Analyze the complete interview transcript below.
 2. Generate a structured SOAP note in valid JSON format.
-3. Assess the risk level based on symptom severity, red flags, and urgency.
-
-RISK ASSESSMENT CRITERIA:
-- HIGH: Life-threatening symptoms (chest pain, breathing difficulty, stroke signs, severe bleeding, altered consciousness)
-- MEDIUM: Significant symptoms requiring prompt attention (moderate pain, fever with other symptoms, persistent vomiting)
-- LOW: Minor symptoms that can wait (mild pain, common cold, minor injuries)
 
 OUTPUT FORMAT (respond with ONLY this JSON, no other text):
 {{
     "subjective": "Patient's reported symptoms, history, and complaints in narrative form.",
     "objective": "Observable findings, vitals if mentioned, and clinical observations.",
     "assessment": "Summary of the clinical picture. DO NOT diagnose. State observations only.",
-    "plan": "Recommended next steps: further tests, specialist referral, monitoring, etc.",
-    "risk_score": "HIGH or MEDIUM or LOW"
+    "plan": "Recommended next steps: further tests, specialist referral, monitoring, etc."
 }}
 
 CRITICAL RULES:

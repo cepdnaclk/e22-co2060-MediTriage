@@ -19,7 +19,6 @@ class SOAPNoteSchema(BaseModel):
     objective: str = Field(default="", description="Observable findings and vitals")
     assessment: str = Field(default="", description="Clinical observations (NOT a diagnosis)")
     plan: str = Field(default="", description="Recommended next steps")
-    risk_score: str = Field(default="MEDIUM", description="HIGH, MEDIUM, or LOW")
 
 
 class ChatMessageResponse(BaseModel):

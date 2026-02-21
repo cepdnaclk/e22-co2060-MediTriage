@@ -112,12 +112,9 @@ def update_encounter_urgency(encounter_id: UUID, is_urgent: bool, db: Session) -
             detail=f"Encounter with ID {encounter_id} not found"
         )
     
-    # Note: Adding is_urgent field requires model update
-    # For now, we'll log this - actual field should be added to MedicalEncounter model
-    logger.info(f"Encounter urgency flagged: id={encounter_id}, is_urgent={is_urgent}")
-    
-    # If risk_score needs to be updated based on urgency
-    # encounter.risk_score = RiskScore.HIGH if is_urgent else encounter.risk_score
+    # Persist the urgency flag
+    encounter.is_urgent = is_urgent
+    logger.info(f"Encounter urgency updated: id={encounter_id}, is_urgent={is_urgent}")
     
     db.commit()
     db.refresh(encounter)

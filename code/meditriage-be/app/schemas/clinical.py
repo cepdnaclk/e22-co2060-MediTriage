@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, List
-from app.models.clinical import EncounterStatus, RiskScore, SenderType
+from app.models.clinical import EncounterStatus, SenderType
 
 
 # ==================== Medical Encounter Schemas ====================
@@ -24,7 +24,7 @@ class EncounterResponse(BaseModel):
     nurse_id: UUID
     doctor_id: Optional[UUID]
     status: EncounterStatus
-    risk_score: Optional[RiskScore]
+    is_urgent: bool
     chief_complaint: Optional[str]
     encounter_timestamp: datetime
     created_at: datetime
@@ -35,9 +35,8 @@ class EncounterResponse(BaseModel):
 
 
 class EncounterUpdateRequest(BaseModel):
-    """Request schema for updating encounter (e.g., urgency flag)."""
+    """Request schema for updating encounter urgency (nurse toggle)."""
     is_urgent: Optional[bool] = Field(None, description="Mark encounter as urgent")
-    risk_score: Optional[RiskScore] = Field(None, description="Update risk score")
 
 
 # ==================== Triage Interaction Schemas ====================

@@ -11,7 +11,6 @@ from .clinical import (
     TriageInteraction,
     ClinicalNote,
     EncounterStatus,
-    RiskScore,
     SenderType
 )
 
@@ -25,6 +24,5 @@ __all__ = [
     "TriageInteraction",
     "ClinicalNote",
     "EncounterStatus",
-    "RiskScore",
     "SenderType",
 ]

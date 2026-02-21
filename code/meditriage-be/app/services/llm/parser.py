@@ -27,7 +27,6 @@ class SOAPNote:
     objective: str
     assessment: str
     plan: str
-    risk_score: str  # HIGH, MEDIUM, LOW
 
 
 class LLMOutputParser:
@@ -92,21 +91,14 @@ class LLMOutputParser:
             )
 
         # Validate required fields
-        required_fields = ["subjective", "objective", "assessment", "plan", "risk_score"]
+        required_fields = ["subjective", "objective", "assessment", "plan"]
         for field in required_fields:
             if field not in data:
                 logger.warning(f"Missing field '{field}' in SOAP note, using empty string.")
-
-        # Normalize risk score
-        risk = data.get("risk_score", "MEDIUM").upper().strip()
-        if risk not in ("HIGH", "MEDIUM", "LOW"):
-            logger.warning(f"Invalid risk_score '{risk}', defaulting to MEDIUM.")
-            risk = "MEDIUM"
 
         return SOAPNote(
             subjective=data.get("subjective", ""),
             objective=data.get("objective", ""),
             assessment=data.get("assessment", ""),
             plan=data.get("plan", ""),
-            risk_score=risk
         )
