@@ -5,8 +5,8 @@ interface ReviewModalProps {
     isOpen: boolean;
     generatedSoap: SoapNote | null;
     setGeneratedSoap: (soap: any) => void;
-    formData: { name: string; age: string; gender: string; complaint: string };
-    setFormData: (data: { name: string; age: string; gender: string; complaint: string }) => void;
+    formData: { firstName: string; lastName: string; birthYear: string; birthMonth: string; birthDay: string; gender: string; complaint: string };
+    setFormData: (data: any) => void;
     editingCaseId: string | null;
     onSubmit: () => void;
     onDiscard: () => void;
@@ -22,6 +22,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     onSubmit,
     onDiscard,
 }) => {
+    const [showDayGrid, setShowDayGrid] = React.useState(false);
     if (!isOpen) return null;
 
     return (
@@ -56,21 +57,72 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-6">
-                                        <div className="col-span-1 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Patient Name <span className="text-red-500">*</span></label>
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 ml-1">First Name <span className="text-red-500">*</span></label>
                                             <input
                                                 className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                                                value={formData.name}
-                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                value={formData.firstName}
+                                                onChange={e => setFormData({ ...formData, firstName: e.target.value })}
                                             />
                                         </div>
-                                        <div className="col-span-1 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Age <span className="text-red-500">*</span></label>
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 ml-1">Last Name <span className="text-red-500">*</span></label>
                                             <input
                                                 className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                                                value={formData.age}
-                                                onChange={e => setFormData({ ...formData, age: e.target.value })}
+                                                value={formData.lastName}
+                                                onChange={e => setFormData({ ...formData, lastName: e.target.value })}
                                             />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 ml-1">Date of Birth <span className="text-red-500">*</span></label>
+                                            <div className="grid grid-cols-3 gap-3 mb-4">
+                                                <select
+                                                    className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all appearance-none cursor-pointer text-sm"
+                                                    value={formData.birthYear}
+                                                    onChange={e => setFormData({ ...formData, birthYear: e.target.value })}
+                                                >
+                                                    <option value="" disabled>Year</option>
+                                                    {Array.from({ length: 91 }, (_, i) => (new Date().getFullYear() - i).toString()).map(y => (
+                                                        <option key={y} value={y}>{y}</option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all appearance-none cursor-pointer text-sm"
+                                                    value={formData.birthMonth}
+                                                    onChange={e => setFormData({ ...formData, birthMonth: e.target.value })}
+                                                >
+                                                    <option value="" disabled>Month</option>
+                                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
+                                                        <option key={m} value={m}>{m}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="relative">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowDayGrid(!showDayGrid)}
+                                                        className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all text-left text-sm"
+                                                    >
+                                                        {formData.birthDay || 'Day'}
+                                                    </button>
+                                                    {showDayGrid && (
+                                                        <div className="absolute top-full left-0 right-[-100px] mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-[90] animate-scale-up grid grid-cols-7 gap-1.5 w-[280px]">
+                                                            {Array.from({ length: 31 }, (_, i) => (i + 1).toString()).map(day => (
+                                                                <button
+                                                                    key={day}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormData({ ...formData, birthDay: day });
+                                                                        setShowDayGrid(false);
+                                                                    }}
+                                                                    className={`aspect-square rounded-lg text-[11px] font-bold transition-all ${formData.birthDay === day ? 'bg-[#17406E] text-white' : 'bg-[#f2f2f7] text-gray-500 hover:bg-gray-200'}`}
+                                                                >
+                                                                    {day}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="col-span-1 space-y-2">
                                             <label className="text-xs font-bold text-gray-500 ml-1">Gender</label>
