@@ -41,16 +41,16 @@ async def start_triage_interview(
 
     **Required Role**: Nurse
     """
-    logger.info(f"Starting triage interview for encounter_id={request.encounter_id}, nurse={current_user.full_name}")
+    logger.info(f"Starting triage interview for patient_id={request.patient_id}, nurse={current_user.full_name}")
     try:
-        response = await triage_engine.start_interview(request, db)
-        logger.info(f"Triage interview started successfully for encounter_id={request.encounter_id}")
+        response = await triage_engine.start_interview(request, current_user.id, db)
+        logger.info(f"Triage interview started successfully for patient_id={request.patient_id}")
         return response
     except ValueError as e:
-        logger.error(f"Encounter not found or invalid status: encounter_id={request.encounter_id}, error={str(e)}")
+        logger.error(f"Patient not found or invalid status: patient_id={request.patient_id}, error={str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to start interview for encounter_id={request.encounter_id}: {str(e)}", exc_info=True)
+        logger.error(f"Failed to start interview for patient_id={request.patient_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to start interview: {str(e)}")
 
 

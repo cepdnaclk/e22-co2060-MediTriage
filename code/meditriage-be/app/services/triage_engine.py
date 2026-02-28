@@ -22,6 +22,7 @@ from app.schemas.chat import (
     StartInterviewRequest,
     StartInterviewResponse,
 )
+from app.services.encounter_service import create_encounter
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -70,22 +71,20 @@ def _build_transcript(interactions: list[TriageInteraction]) -> str:
 
 async def start_interview(
     request: StartInterviewRequest,
+    nurse_id: UUID,
     db: Session
 ) -> StartInterviewResponse:
     """
     Start a triage interview for an encounter.
-    Generates the AI's initial greeting and saves it as the first interaction.
+    Creates a new medical encounter, generates the AI's initial greeting, and saves it.
     """
-    # Fetch the encounter
-    encounter = db.query(MedicalEncounter).filter(
-        MedicalEncounter.id == request.encounter_id
-    ).first()
-
-    if not encounter:
-        raise ValueError(f"Encounter {request.encounter_id} not found.")
-
-    if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
-        raise ValueError(f"Encounter {request.encounter_id} is not in TRIAGE_IN_PROGRESS status.")
+    # Create the encounter
+    encounter = create_encounter(
+        patient_id=request.patient_id,
+        nurse_id=nurse_id,
+        chief_complaint=request.chief_complaint,
+        db=db
+    )
 
     pipeline = _get_pipeline()
 

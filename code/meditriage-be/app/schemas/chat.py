@@ -30,7 +30,8 @@ class ChatMessageResponse(BaseModel):
 
 class StartInterviewRequest(BaseModel):
     """Request body to start a new triage interview."""
-    encounter_id: UUID = Field(..., description="ID of the medical encounter to start triage for")
+    patient_id: UUID = Field(..., description="ID of the patient to start triage for")
+    chief_complaint: Optional[str] = Field(default=None, description="Initial reason for visit")
 
 
 class StartInterviewResponse(BaseModel):
