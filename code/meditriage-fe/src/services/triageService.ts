@@ -94,11 +94,15 @@ export const updateEncounterUrgency = async (encounterId: string, isUrgent: bool
     return api.patch(`/triage/${encounterId}`, { is_urgent: isUrgent });
 };
 
-// Update encounter (doctor name, status, urgency)
+// Update encounter (doctor name, status, urgency, notes)
 export const updateEncounter = async (encounterId: string, data: {
     doctor_name?: string;
     status?: string;
     is_urgent?: boolean;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
 }) => {
     return api.patch(`/triage/${encounterId}`, data);
 };

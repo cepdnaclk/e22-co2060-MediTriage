@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PatientCase, CareSetting, TriageStatus, User } from '../../types';
 import { ToastType } from '../ui/Toast';
-import PatientDetailModal from './PatientDetailModal';
+import PatientDetailModal from '../shared/PatientDetailModal';
 
 interface OverviewPaneProps {
     activeCases: PatientCase[];

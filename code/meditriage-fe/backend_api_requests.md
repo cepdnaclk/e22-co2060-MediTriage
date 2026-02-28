@@ -26,7 +26,12 @@ The following backend endpoints are needed or need modifications for the new fro
 { "doctor_id": "uuid" }
 ```
 
-### 3. `DELETE /triage/{encounter_id}` — delete encounter record
+### 3. `PATCH /auth/me` or UI Profile Update
+**Purpose**: Allow a doctor (or nurse) to update their display name or profile details from Settings.
+**Current state**: Minimal support; no public-facing profile update for self.
+**Request**: Add an endpoint that takes `full_name` and updates the currently authenticated user's profile.
+
+### 4. `DELETE /triage/{encounter_id}` — delete encounter record
 **Purpose**: Allow deletion of a triage/encounter record from the patient detail modal.
 **Current state**: Does not exist.
 **Request**: Soft-delete or hard-delete an encounter and its associated clinical notes.
