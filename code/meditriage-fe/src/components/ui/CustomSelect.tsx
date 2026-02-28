@@ -11,9 +11,11 @@ interface CustomSelectProps {
   onChange: (value: string) => void;
   className?: string;
   buttonStyle?: React.CSSProperties;
+  /** Open dropdown upward instead of downward */
+  dropUp?: boolean;
 }
 
-const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange, className = '', buttonStyle }) => {
+const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange, className = '', buttonStyle, dropUp = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +45,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange, c
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-scale-up origin-top-right">
+        <div
+          className={`absolute left-0 w-full bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 ${dropUp ? 'bottom-full mb-2 origin-bottom' : 'top-full mt-2 origin-top'
+            }`}
+          style={{ animation: 'modalScaleIn 0.15s ease forwards' }}
+        >
           {options.map((option) => (
             <button
               key={option.value}

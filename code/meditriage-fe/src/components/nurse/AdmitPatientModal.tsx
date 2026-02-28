@@ -1,108 +1,220 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import AnimatedModal from '../ui/AnimatedModal';
+import { PatientCase, TriageStatus } from '../../types';
+import { ToastType } from '../ui/Toast';
+import * as patientService from '../../services/patientService';
+import * as triageService from '../../services/triageService';
 
 interface AdmitPatientModalProps {
     isOpen: boolean;
-    formData: { firstName: string; lastName: string; birthYear: string; birthMonth: string; birthDay: string; gender: string; complaint: string };
-    setFormData: (data: any) => void;
-    onStartInterview: () => void;
     onClose: () => void;
+    onStartInterview: (encounterId: string, newCase: PatientCase) => void;
+    prefillData: any;
+    showToast: (msg: string, type: ToastType) => void;
 }
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 91 }, (_, i) => (currentYear - i).toString());
 
-const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({
-    isOpen,
-    formData,
-    setFormData,
-    onStartInterview,
-    onClose,
-}) => {
-    const [showDayGrid, setShowDayGrid] = React.useState(false);
+/**
+ * Step 2 of patient registration — Demographics Form.
+ * Creates patient in DB and starts triage interview.
+ */
+const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, onStartInterview, prefillData, showToast }) => {
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [dob, setDob] = useState('');
+    const [gender, setGender] = useState('');
+    const [contactNo, setContactNo] = useState('');
+    const [chiefComplaint, setChiefComplaint] = useState('');
+    const [nic, setNic] = useState('');
+    const [existingPatientId, setExistingPatientId] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!isOpen) return null;
+    // Auto-fill from NIC gatekeeper result
+    useEffect(() => {
+        if (prefillData && isOpen) {
+            setNic(prefillData.national_id || '');
+            setFirstName(prefillData.first_name || '');
+            setLastName(prefillData.last_name || '');
+            setDob(prefillData.date_of_birth || '');
+            setGender(prefillData.gender || '');
+            setContactNo(prefillData.contact_number || '');
+            setExistingPatientId(prefillData.id || null);
+            setChiefComplaint('');
+        }
+    }, [prefillData, isOpen]);
+
+    const resetForm = () => {
+        setFirstName(''); setLastName(''); setDob(''); setGender('');
+        setContactNo(''); setChiefComplaint(''); setNic('');
+        setExistingPatientId(null); setIsSubmitting(false);
+    };
+
+    const handleClose = () => {
+        resetForm();
+        onClose();
+    };
+
+    const handleSubmit = async () => {
+        if (!firstName.trim() || !lastName.trim() || !dob || !chiefComplaint.trim()) {
+            showToast('Please fill required fields', 'error');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            let patientId = existingPatientId;
+
+            // Create patient if new
+            if (!patientId) {
+                const patient = await patientService.createPatient({
+                    national_id: nic,
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
+                    date_of_birth: dob,
+                    gender: gender || undefined,
+                    contact_number: contactNo || undefined,
+                });
+                patientId = patient.id;
+            }
+
+            // Start triage interview
+            const interview = await triageService.startInterview(patientId!, chiefComplaint.trim());
+
+            // Build case for local state
+            const newCase: PatientCase = {
+                id: interview.encounter_id,
+                patientId: patientId!,
+                patientName: `${firstName.trim()} ${lastName.trim()}`,
+                age: dob ? String(new Date().getFullYear() - new Date(dob).getFullYear()) : '',
+                gender: gender,
+                chiefComplaint: chiefComplaint.trim(),
+                nurseId: '',
+                startTime: Date.now(),
+                status: TriageStatus.IN_PROGRESS,
+                messages: [],
+                encounterId: interview.encounter_id,
+            };
+
+            showToast('Patient admitted — starting interview', 'success');
+            resetForm();
+            onStartInterview(interview.encounter_id, newCase);
+        } catch (err: any) {
+            showToast(err?.message || 'Failed to admit patient', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const inputStyle = "w-full px-4 py-3.5 rounded-[18px] text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all";
+    const inputBg = { background: '#f0f2f7', border: '2px solid transparent' };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
-            <div className="bg-white rounded-[45px] w-full max-w-lg p-10 relative z-10 shadow-2xl transform transition-all scale-100 overflow-y-auto max-h-[95vh]" style={{ padding: '30px 30px 35px' }}>
-                <div className="flex justify-between items-center mb-8" style={{ borderBottom: '1px solid #e3e3e3', paddingBottom: '20px', marginBottom: '30px' }}>
-                    <h2 className="text-2xl font-extrabold text-gray-900">New Admission</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+        <AnimatedModal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-xl" zIndex={70}>
+            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="px-8 pt-8 pb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Add Patient</h3>
+                    <p className="text-sm text-gray-500 mt-1">Enter the patient's demographic information</p>
                 </div>
-                <div className="space-y-5">
-                    <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">First Name</label>
-                        <input className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[15px] text-gray-900 text-sm font-medium focus:ring-0 focus:outline-none transition-all placeholder-gray-400" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} placeholder="First Name" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Last Name</label>
-                        <input className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[15px] text-gray-900 text-sm font-medium focus:ring-0 focus:outline-none transition-all placeholder-gray-400" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} placeholder="Last Name" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Date of Birth</label>
-                        <div className="grid grid-cols-3 gap-3">
-                            <select className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[15px] py-[15px] text-gray-900 text-sm font-medium focus:ring-0 focus:outline-none transition-all appearance-none cursor-pointer" value={formData.birthYear} onChange={e => setFormData({ ...formData, birthYear: e.target.value })}>
-                                <option value="" disabled>Year</option>
-                                {years.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                            <select className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[15px] py-[15px] text-gray-900 text-sm font-medium focus:ring-0 focus:outline-none transition-all appearance-none cursor-pointer" value={formData.birthMonth} onChange={e => setFormData({ ...formData, birthMonth: e.target.value })}>
-                                <option value="" disabled>Month</option>
-                                {months.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDayGrid(!showDayGrid)}
-                                    className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[15px] py-[15px] text-gray-900 text-sm font-medium text-left transition-all"
-                                >
-                                    {formData.birthDay || 'Day'}
-                                </button>
-                                {showDayGrid && (
-                                    <div className="absolute top-full left-0 right-[-100px] mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-scale-up grid grid-cols-7 gap-1.5 w-[280px]">
-                                        {Array.from({ length: 31 }, (_, i) => (i + 1).toString()).map(day => (
-                                            <button
-                                                key={day}
-                                                type="button"
-                                                onClick={() => {
-                                                    setFormData({ ...formData, birthDay: day });
-                                                    setShowDayGrid(false);
-                                                }}
-                                                className={`aspect-square rounded-lg text-[11px] font-bold transition-all ${formData.birthDay === day ? 'bg-[#17406E] text-white' : 'bg-[#f0f2f7] text-gray-600 hover:bg-gray-200'}`}
-                                            >
-                                                {day}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+
+                {/* Form */}
+                <div className="px-8 pb-4 space-y-4" style={{ maxHeight: '55vh', overflowY: 'auto' }}>
+                    {/* Name Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">First Name *</label>
+                            <input
+                                type="text" placeholder="First Name" value={firstName}
+                                onChange={e => setFirstName(e.target.value)}
+                                className={inputStyle} style={inputBg}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Last Name *</label>
+                            <input
+                                type="text" placeholder="Last Name" value={lastName}
+                                onChange={e => setLastName(e.target.value)}
+                                className={inputStyle} style={inputBg}
+                            />
                         </div>
                     </div>
-                    <div style={{ margin: '30px 0 35px' }}>
-                        <label className="block text-sm font-bold text-gray-900 mb-3 ml-1">Gender</label>
-                        <div className="flex gap-6">
-                            {['Male', 'Female', 'Prefer not to say'].map(g => (
-                                <label key={g} className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setFormData({ ...formData, gender: g })}>
-                                    <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-all ${formData.gender === g ? 'border-[#17406E]' : 'border-gray-300 group-hover:border-gray-400'}`}>
-                                        {formData.gender === g && <div className="w-2.5 h-2.5 rounded-full bg-[#17406E]" />}
+
+                    {/* DOB */}
+                    <div>
+
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth *</label>
+                        <input
+                            type="date" value={dob}
+                            onChange={e => setDob(e.target.value)}
+                            className={inputStyle} style={inputBg}
+                        />
+                    </div>
+
+                    {/* Gender Radio */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">Gender</label>
+                        <div className="flex gap-4">
+                            {[
+                                { value: 'MALE', label: 'Male' },
+                                { value: 'FEMALE', label: 'Female' },
+                                { value: 'OTHER', label: 'Prefer not to say' },
+                            ].map(opt => (
+                                <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${gender === opt.value ? 'border-[#17406E] bg-[#17406E]' : 'border-gray-300 group-hover:border-gray-400'}`}>
+                                        {gender === opt.value && <div className="w-2 h-2 bg-white rounded-full" />}
                                     </div>
-                                    <span className={`text-sm ${formData.gender === g ? 'text-[#17406E] font-bold' : 'text-gray-500 font-medium'}`}>{g}</span>
+                                    <input type="radio" name="gender" value={opt.value} checked={gender === opt.value} onChange={e => setGender(e.target.value)} className="hidden" />
+                                    <span className="text-sm font-medium text-gray-700">{opt.label}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
+
+                    {/* Contact */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2 ml-1">Chief Complaint</label>
-                        <input className="w-full bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[15px] text-gray-900 text-sm font-medium focus:ring-0 focus:outline-none transition-all placeholder-gray-400" value={formData.complaint} onChange={e => setFormData({ ...formData, complaint: e.target.value })} placeholder="Main reason for visit" />
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact Number</label>
+                        <input
+                            type="tel" placeholder="Phone number" value={contactNo}
+                            onChange={e => setContactNo(e.target.value)}
+                            className={inputStyle} style={inputBg}
+                        />
+                    </div>
+
+                    {/* Chief Complaint */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Chief Complaint *</label>
+                        <textarea
+                            placeholder="Describe the primary reason for visit"
+                            value={chiefComplaint}
+                            onChange={e => setChiefComplaint(e.target.value)}
+                            rows={3}
+                            className={`${inputStyle} resize-none`} style={inputBg}
+                        />
                     </div>
                 </div>
-                <div className="flex gap-3 mt-8" style={{ borderTop: '1px solid #e3e3e3', paddingTop: '30px', marginTop: '40px' }}>
-                    <button onClick={onClose} className="flex-1 py-[15px] rounded-full border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">Cancel</button>
-                    <button onClick={onStartInterview} className="flex-1 py-[15px] rounded-full bg-[#17406E] text-white text-sm font-bold hover:bg-[#1c5b7e] transition-all">Start Triage Interview</button>
+
+                {/* Footer */}
+                <div className="px-8 py-5 flex gap-3" style={{ borderTop: '1px solid #f0f0f0' }}>
+                    <button onClick={handleClose} className="flex-1 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="flex-1 py-3.5 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Starting...
+                            </>
+                        ) : (
+                            'Start Triage Interview'
+                        )}
+                    </button>
                 </div>
             </div>
-        </div>
+        </AnimatedModal>
     );
 };
 

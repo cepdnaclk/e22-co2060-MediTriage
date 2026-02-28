@@ -1,6 +1,15 @@
-// Triage service — calls FastAPI /triage endpoints.
-
 import { api } from './api';
+
+// Doctor option for dropdowns
+export interface DoctorOption {
+    id: string;
+    full_name: string;
+    license_number: string | null;
+}
+
+export const getDoctors = async (): Promise<DoctorOption[]> => {
+    return api.get<DoctorOption[]>('/users/doctors');
+};
 
 // Backend response types (matching FastAPI schemas)
 interface StartInterviewResponse {
@@ -14,7 +23,6 @@ interface SOAPNoteSchema {
     objective: string;
     assessment: string;
     plan: string;
-    risk_score: string;
 }
 
 interface ChatMessageResponse {
@@ -44,25 +52,12 @@ interface ClinicalNoteResponse {
     updated_at: string;
 }
 
-export interface EncounterQueueItem {
-    id: string;
-    patient_id: string;
-    nurse_id: string;
-    doctor_id: string | null;
-    status: string;
-    risk_score: string | null;
-    chief_complaint: string | null;
-    encounter_timestamp: string;
-    patient_name: string;
-    patient_age: number;
-    patient_gender: string;
-    created_at: string;
-}
-
-
-// Start a triage interview for an encounter
-export const startInterview = async (encounterId: string): Promise<StartInterviewResponse> => {
-    return api.post<StartInterviewResponse>('/triage/start', { encounter_id: encounterId });
+// Start a triage interview for a patient
+export const startInterview = async (patientId: string, chiefComplaint?: string): Promise<StartInterviewResponse> => {
+    return api.post<StartInterviewResponse>('/triage/start', {
+        patient_id: patientId,
+        chief_complaint: chiefComplaint,
+    });
 };
 
 // Send a chat message during triage interview
@@ -95,21 +90,33 @@ export const updateClinicalNote = async (
 };
 
 // Update encounter urgency (Nurse)
-export const updateEncounterUrgency = async (
-    encounterId: string,
-    isUrgent: boolean
-) => {
+export const updateEncounterUrgency = async (encounterId: string, isUrgent: boolean) => {
     return api.patch(`/triage/${encounterId}`, { is_urgent: isUrgent });
 };
 
-
-// Get active triage queue
-export const getQueue = async (): Promise<EncounterQueueItem[]> => {
-    return api.get<EncounterQueueItem[]>('/triage/queue');
+// Update encounter (doctor name, status, urgency)
+export const updateEncounter = async (encounterId: string, data: {
+    doctor_name?: string;
+    status?: string;
+    is_urgent?: boolean;
+}) => {
+    return api.patch(`/triage/${encounterId}`, data);
 };
 
-// Get completed history
-export const getHistory = async (): Promise<EncounterQueueItem[]> => {
-    return api.get<EncounterQueueItem[]>('/triage/history');
-};
+// Encounter list item from dashboard endpoint
+export interface EncounterListItem {
+    id: string;
+    patient_id: string;
+    patient_name: string;
+    patient_gender: string | null;
+    patient_age: string | null;
+    chief_complaint: string | null;
+    status: string;
+    doctor_name: string | null;
+    encounter_timestamp: string;
+}
 
+// List all encounters with patient info (for dashboard)
+export const listEncounters = async (): Promise<EncounterListItem[]> => {
+    return api.get<EncounterListItem[]>('/triage/encounters');
+};
