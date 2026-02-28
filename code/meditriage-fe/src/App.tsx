@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { User, UserRole, PatientCase, TriageStatus, UrgencyLevel } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { User, UserRole, PatientCase, TriageStatus, CareSetting } from './types';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
-import NurseDashboard from './components/NurseDashboard';
-import DoctorDashboard from './components/DoctorDashboard';
+import TopHeader from './components/TopHeader';
+import OverviewPane from './components/nurse/OverviewPane';
+import PatientsPane from './components/nurse/PatientsPane';
+import SettingsPane from './components/nurse/SettingsPane';
+import ChatPane from './components/nurse/ChatPane';
+import NicGatekeeperModal from './components/nurse/NicGatekeeperModal';
+import AdmitPatientModal from './components/nurse/AdmitPatientModal';
 import Toast, { ToastType } from './components/ui/Toast';
 import * as authService from './services/authService';
 import * as triageService from './services/triageService';
@@ -12,19 +18,27 @@ import { getToken } from './services/api';
 const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [cases, setCases] = useState<PatientCase[]>([]);
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [careSetting, setCareSetting] = useState<CareSetting>(CareSetting.OPD);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-    // Toast State
+    // Patient registration flow
+    const [showNicModal, setShowNicModal] = useState(false);
+    const [showAdmitModal, setShowAdmitModal] = useState(false);
+    const [prefillPatient, setPrefillPatient] = useState<any>(null);
+    const [pendingCase, setPendingCase] = useState<PatientCase | null>(null);
+
+    // Toast
     const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
-        message: '',
-        type: 'info',
-        isVisible: false
+        message: '', type: 'info', isVisible: false,
     });
 
-    const showToast = (message: string, type: ToastType = 'info') => {
+    const showToast = useCallback((message: string, type: ToastType = 'info') => {
         setToast({ message, type, isVisible: true });
-    };
+    }, []);
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isChatRoute = location.pathname.startsWith('/chat');
 
     // Check for existing JWT on mount
     useEffect(() => {
@@ -34,7 +48,6 @@ const App: React.FC = () => {
                     const user = await authService.getCurrentUser();
                     setCurrentUser(user);
                 } catch {
-                    // Token expired or invalid — clear it
                     authService.logout();
                 }
             }
@@ -43,127 +56,176 @@ const App: React.FC = () => {
         checkAuth();
     }, []);
 
-    // Fetch cases from backend queue & history
+    // Load existing encounters from backend when user is authenticated
     useEffect(() => {
-        if (currentUser) {
-            const fetchCases = async () => {
-                try {
-                    if (currentUser.role === UserRole.NURSE) {
-                        const [queue, history] = await Promise.all([
-                            triageService.getQueue(),
-                            triageService.getHistory()
-                        ]);
+        if (!currentUser) return;
+        triageService.listEncounters().then(encounters => {
+            const mapped: PatientCase[] = encounters.map(enc => {
+                // Map backend status to frontend enum
+                let status = TriageStatus.IN_PROGRESS;
+                if (enc.status === 'AWAITING_REVIEW') status = TriageStatus.AWAITING_REVIEW;
+                else if (enc.status === 'COMPLETED') status = TriageStatus.COMPLETED;
 
-                        const mapToCase = (item: any): PatientCase => ({
-                            id: item.id,
-                            patientName: item.patient_name,
-                            age: item.patient_age.toString(),
-                            gender: item.patient_gender,
-                            chiefComplaint: item.chief_complaint || "No complaint",
-                            nurseId: item.nurse_id,
-                            startTime: new Date(item.created_at.endsWith('Z') ? item.created_at : item.created_at + 'Z').getTime(),
-                            status: item.status === 'COMPLETED' ? TriageStatus.TREATED :
-                                item.risk_score === 'HIGH' ? TriageStatus.URGENT : TriageStatus.WAITING,
-
-                            messages: [], // Details loaded on demand
-                        });
-
-                        setCases([...queue.map(mapToCase), ...history.map(mapToCase)]);
-                    }
-                } catch (err) {
-                    console.error("Failed to load queue", err);
-                    showToast("Failed to sync dashboard data (Is backend running?)", 'error');
-                }
-            };
-            fetchCases();
-        }
+                return {
+                    id: enc.id,
+                    patientId: enc.patient_id,
+                    patientName: enc.patient_name,
+                    age: enc.patient_age || '',
+                    gender: enc.patient_gender || '',
+                    chiefComplaint: enc.chief_complaint || '',
+                    nurseId: '',
+                    doctorName: enc.doctor_name || undefined,
+                    startTime: new Date(enc.encounter_timestamp).getTime(),
+                    status,
+                    messages: [],
+                    encounterId: enc.id,
+                };
+            });
+            setCases(mapped);
+        }).catch(() => { });
     }, [currentUser]);
+
+    /* ── Handlers ──────────────────────────────────── */
 
     const handleLogin = (user: User) => {
         setCurrentUser(user);
-        setActiveTab('dashboard');
+        navigate('/overview');
     };
 
     const handleLogout = () => {
         authService.logout();
         setCurrentUser(null);
+        setCases([]);
+        navigate('/');
     };
 
-    const handleAddCase = (newCase: PatientCase) => {
+    const handleAddCase = useCallback((newCase: PatientCase) => {
         setCases(prev => [newCase, ...prev]);
-    };
+    }, []);
 
-    const handleRemoveCase = (caseId: string) => {
-        setCases(prev => prev.map(c =>
-            c.id === caseId ? { ...c, status: TriageStatus.REMOVED } : c
-        ));
-    };
-
-    const handleUpdateCase = (updatedCase: PatientCase) => {
+    const handleUpdateCase = useCallback((updatedCase: PatientCase) => {
         setCases(prev => prev.map(c => c.id === updatedCase.id ? updatedCase : c));
+    }, []);
+
+    const handleRemoveCase = useCallback((caseId: string) => {
+        setCases(prev => prev.filter(c => c.id !== caseId));
+    }, []);
+
+    // Patient registration flow
+    const handleAddPatientClick = () => {
+        setPrefillPatient(null);
+        setShowNicModal(true);
     };
 
-    const handleTreatCase = (caseId: string) => {
-        setCases(prev => prev.map(c =>
-            c.id === caseId ? { ...c, status: TriageStatus.TREATED } : c
-        ));
+    const handleNicProceed = (patientData: any) => {
+        setPrefillPatient(patientData);
+        setShowNicModal(false);
+        setShowAdmitModal(true);
     };
 
-    // Show nothing while checking existing auth
+    const handleStartChat = (encounterId: string, newCase: PatientCase) => {
+        // Store case but don't add to list yet — added after SOAP review
+        setPendingCase(newCase);
+        setShowAdmitModal(false);
+        navigate(`/chat/${encounterId}`);
+    };
+
+    /* ── Auth check spinner ───────────────────────── */
+
     if (isCheckingAuth) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-[#f2f2f7]">
-                <div className="w-8 h-8 border-4 border-[#17406E] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-[#17406E] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
+    /* ── Unauthenticated ──────────────────────────── */
+
+    if (!currentUser) {
+        return (
+            <div className="flex h-screen w-full bg-[#f2f2f7] font-sans text-gray-900 overflow-hidden">
+                <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} onClose={() => setToast(p => ({ ...p, isVisible: false }))} />
+                <Login onLogin={handleLogin} />
+            </div>
+        );
+    }
+
+    /* ── Authenticated Layout ─────────────────────── */
+
+    const waitingCount = cases.filter(c => c.status !== TriageStatus.COMPLETED).length;
+
     return (
         <div className="flex h-screen w-full bg-[#f2f2f7] font-sans text-gray-900 overflow-hidden">
             {/* Global Toast */}
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                isVisible={toast.isVisible}
-                onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+            <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} onClose={() => setToast(p => ({ ...p, isVisible: false }))} />
+
+            {/* Sidebar */}
+            <Sidebar user={currentUser} onLogout={handleLogout} queueCount={waitingCount} />
+
+            {/* Top Header — hidden on chat route */}
+            {!isChatRoute && (
+                <TopHeader
+                    careSetting={careSetting}
+                    onCareSettingChange={setCareSetting}
+                    onAddPatient={handleAddPatientClick}
+                />
+            )}
+
+            {/* Main Content Area */}
+            <main className={`flex-1 ml-[19rem] h-full relative overflow-y-auto ${isChatRoute ? 'pt-0' : 'pt-[80px]'}`}>
+                <div className="p-8">
+                    <Routes>
+                        <Route path="/overview" element={
+                            <OverviewPane
+                                activeCases={cases}
+                                careSetting={careSetting}
+                                user={currentUser}
+                                onNavigate={(view: string) => navigate(`/${view}`)}
+                                showToast={showToast}
+                                onRemoveCase={handleRemoveCase}
+                            />
+                        } />
+                        <Route path="/patients" element={
+                            <PatientsPane
+                                cases={cases}
+                                user={currentUser}
+                                showToast={showToast}
+                                onRemoveCase={handleRemoveCase}
+                            />
+                        } />
+                        <Route path="/settings" element={<SettingsPane />} />
+                        <Route path="/chat/:encounterId" element={
+                            <ChatPane
+                                user={currentUser}
+                                cases={cases}
+                                pendingCase={pendingCase}
+                                onAddCase={handleAddCase}
+                                onUpdateCase={handleUpdateCase}
+                                onRemoveCase={handleRemoveCase}
+                                onClearPendingCase={() => setPendingCase(null)}
+                                showToast={showToast}
+                            />
+                        } />
+                        <Route path="*" element={<Navigate to="/overview" replace />} />
+                    </Routes>
+                </div>
+            </main>
+
+            {/* Patient Registration Modals */}
+            <NicGatekeeperModal
+                isOpen={showNicModal}
+                onClose={() => setShowNicModal(false)}
+                onProceed={handleNicProceed}
             />
 
-            {!currentUser ? (
-                <Login onLogin={handleLogin} />
-            ) : (
-                <>
-                    <Sidebar
-                        user={currentUser}
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        onLogout={handleLogout}
-                        queueCount={cases.filter(c => c.status === TriageStatus.WAITING || c.status === TriageStatus.URGENT).length}
-                    />
-
-                    <main className="flex-1 ml-[19rem] h-full relative overflow-hidden">
-                        {currentUser.role === UserRole.NURSE ? (
-                            <NurseDashboard
-                                user={currentUser}
-                                cases={cases}
-                                onAddCase={handleAddCase}
-                                onRemoveCase={handleRemoveCase}
-                                onUpdateCase={handleUpdateCase}
-                                activeView={activeTab}
-                                onNavigate={setActiveTab}
-                                showToast={showToast}
-                            />
-                        ) : (
-                            <DoctorDashboard
-                                user={currentUser}
-                                cases={cases}
-                                activeView={activeTab}
-                                onTreatCase={handleTreatCase}
-                                showToast={showToast}
-                            />
-                        )}
-                    </main>
-                </>
-            )}
+            <AdmitPatientModal
+                isOpen={showAdmitModal}
+                onClose={() => setShowAdmitModal(false)}
+                onStartInterview={handleStartChat}
+                prefillData={prefillPatient}
+                showToast={showToast}
+            />
         </div>
     );
 };

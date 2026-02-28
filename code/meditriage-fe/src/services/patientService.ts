@@ -3,23 +3,24 @@
 import { api } from './api';
 
 // Backend response types (matching FastAPI schemas)
-interface PatientResponse {
+export interface PatientResponse {
     id: string;
     national_id: string;
     first_name: string;
     last_name: string;
     date_of_birth: string;
+    gender: string | null;
     contact_number: string | null;
     created_at: string;
     updated_at: string;
 }
 
-interface EncounterSummary {
+export interface EncounterSummary {
     id: string;
     encounter_timestamp: string;
     chief_complaint: string | null;
     status: string;
-    risk_score: string | null;
+    is_urgent: boolean;
     nurse_name: string;
     doctor_name: string | null;
 }
@@ -30,6 +31,7 @@ export const createPatient = async (data: {
     first_name: string;
     last_name: string;
     date_of_birth: string;
+    gender?: string;
     contact_number?: string;
 }): Promise<PatientResponse> => {
     return api.post<PatientResponse>('/patients', data);
@@ -52,12 +54,23 @@ export const getPatient = async (patientId: string): Promise<PatientResponse> =>
     return api.get<PatientResponse>(`/patients/${patientId}`);
 };
 
+// Update patient
+export const updatePatient = async (patientId: string, data: {
+    first_name?: string;
+    last_name?: string;
+    date_of_birth?: string;
+    gender?: string;
+    contact_number?: string;
+}): Promise<PatientResponse> => {
+    return api.put<PatientResponse>(`/patients/${patientId}`, data);
+};
+
+// Delete patient
+export const deletePatient = async (patientId: string): Promise<{ success: boolean; id: string }> => {
+    return api.delete<{ success: boolean; id: string }>(`/patients/${patientId}`);
+};
+
 // Get patient encounter history
 export const getPatientHistory = async (patientId: string): Promise<EncounterSummary[]> => {
     return api.get<EncounterSummary[]>(`/patients/${patientId}/history`);
-};
-
-// Create a new medical encounter
-export const createEncounter = async (patientId: string, chiefComplaint?: string): Promise<{ id: string }> => {
-    return api.post<{ id: string }>(`/patients/${patientId}/encounters`, { patient_id: patientId, chief_complaint: chiefComplaint });
 };

@@ -1,167 +1,133 @@
-import React from 'react';
-import { SoapNote } from '../../types';
+import React, { useState, useEffect } from 'react';
+import AnimatedModal from '../ui/AnimatedModal';
+import CustomSelect from '../ui/CustomSelect';
+import { ToastType } from '../ui/Toast';
+import * as triageService from '../../services/triageService';
 
 interface ReviewModalProps {
     isOpen: boolean;
-    generatedSoap: SoapNote | null;
-    setGeneratedSoap: (soap: any) => void;
-    formData: { name: string; age: string; gender: string; complaint: string };
-    setFormData: (data: { name: string; age: string; gender: string; complaint: string }) => void;
-    editingCaseId: string | null;
-    onSubmit: () => void;
-    onDiscard: () => void;
+    onClose: () => void;
+    onConfirm: (doctorName: string) => void;
+    subjective: string;
+    objective: string;
+    showToast: (msg: string, type: ToastType) => void;
 }
 
-const ReviewModal: React.FC<ReviewModalProps> = ({
-    isOpen,
-    generatedSoap,
-    setGeneratedSoap,
-    formData,
-    setFormData,
-    editingCaseId,
-    onSubmit,
-    onDiscard,
-}) => {
-    if (!isOpen) return null;
+/**
+ * Review modal — shown after AI analysis.
+ * Displays only Subjective & Objective fields (AI-generated).
+ * Includes doctor assignment dropdown (fetched from backend) and Add Patient button.
+ */
+const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onConfirm, subjective, objective, showToast }) => {
+    const [selectedDoctor, setSelectedDoctor] = useState('');
+    const [doctorOptions, setDoctorOptions] = useState<{ value: string; label: string }[]>([
+        { value: '', label: 'Select a Doctor' },
+    ]);
+    const [loadingDoctors, setLoadingDoctors] = useState(false);
+
+    // Fetch real doctors from backend when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setLoadingDoctors(true);
+            triageService.getDoctors()
+                .then(doctors => {
+                    const options = [
+                        { value: '', label: 'Select a Doctor' },
+                        ...doctors.map(d => ({ value: d.id, label: d.full_name })),
+                    ];
+                    setDoctorOptions(options);
+                })
+                .catch(() => {
+                    showToast('Failed to load doctors', 'error');
+                })
+                .finally(() => setLoadingDoctors(false));
+        }
+    }, [isOpen]);
+
+    const handleConfirm = () => {
+        if (!selectedDoctor) {
+            showToast('Please assign a doctor', 'error');
+            return;
+        }
+        const doctorLabel = doctorOptions.find(d => d.value === selectedDoctor)?.label || selectedDoctor;
+        onConfirm(doctorLabel);
+    };
+
+    const fieldStyle: React.CSSProperties = {
+        background: '#f0f2f7',
+        borderRadius: '18px',
+        padding: '16px 20px',
+        fontSize: '14px',
+        lineHeight: '1.7',
+        color: '#374151',
+        border: 'none',
+        fontWeight: 500,
+    };
 
     return (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <div className="bg-white rounded-[40px] w-full max-w-4xl max-h-[90vh] flex flex-col relative z-10 shadow-2xl overflow-hidden animate-scale-up">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50" style={{ background: 'white' }}>
-                    <h2 className="text-2xl font-extrabold text-gray-900">{editingCaseId ? 'Edit Patient Record' : 'Review Summary'}</h2>
-                    <div className="flex gap-2">
-                        <div onClick={() => generatedSoap && setGeneratedSoap({ ...generatedSoap, urgency: 'RED' })} className={`px-4 py-2 rounded-full font-bold text-xs border cursor-pointer select-none transition-all ${generatedSoap?.urgency === 'RED' ? 'bg-red-500 text-white border-red-600' : 'bg-gray-100 text-gray-400 border-transparent hover:bg-gray-200'}`}>IMMEDIATE</div>
-                        <div onClick={() => generatedSoap && setGeneratedSoap({ ...generatedSoap, urgency: 'YELLOW' })} className={`px-4 py-2 rounded-full font-bold text-xs border cursor-pointer select-none transition-all ${generatedSoap?.urgency === 'YELLOW' ? 'bg-yellow-400 text-black border-yellow-500' : 'bg-gray-100 text-gray-400 border-transparent hover:bg-gray-200'}`}>URGENT</div>
-                        <div onClick={() => generatedSoap && setGeneratedSoap({ ...generatedSoap, urgency: 'GREEN' })} className={`px-4 py-2 rounded-full font-bold text-xs border cursor-pointer select-none transition-all ${generatedSoap?.urgency === 'GREEN' ? 'bg-green-500 text-white border-green-600' : 'bg-gray-100 text-gray-400 border-transparent hover:bg-gray-200'}`}>ROUTINE</div>
+        <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-xl" zIndex={75}>
+            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="px-8 pt-8 pb-3">
+                    <h3 className="text-xl font-bold text-gray-900">Clinical Summary</h3>
+                    <p className="text-sm text-gray-500 mt-1">Review the AI-generated notes and assign a physician</p>
+                </div>
+
+                {/* Content */}
+                <div className="px-8 pb-4 space-y-5" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                    {/* Subjective */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Subjective</label>
+                        <div style={fieldStyle} className="whitespace-pre-wrap">{subjective || 'No data'}</div>
+                    </div>
+
+                    {/* Objective */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Objective</label>
+                        <div style={fieldStyle} className="whitespace-pre-wrap">{objective || 'No data'}</div>
+                    </div>
+
+                    {/* Doctor Assignment */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Attending Physician</label>
+                        {loadingDoctors ? (
+                            <div className="flex items-center gap-2 px-5 py-3.5 bg-[#f0f2f7] rounded-[18px]">
+                                <div className="w-4 h-4 border-2 border-[#17406E] border-t-transparent rounded-full animate-spin" />
+                                <span className="text-sm text-gray-500">Loading doctors...</span>
+                            </div>
+                        ) : (
+                            <CustomSelect
+                                value={selectedDoctor}
+                                options={doctorOptions}
+                                onChange={(val: string) => setSelectedDoctor(val)}
+                                dropUp
+                                buttonStyle={{
+                                    borderRadius: '18px',
+                                    background: '#f0f2f7',
+                                    padding: '14px 20px',
+                                    border: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-10" style={{ background: '#f2f2f7', padding: 0 }}>
-                    {!generatedSoap ? (
-                        <div className="flex flex-col items-center justify-center h-full bg-white" style={{ background: '#ffffffff', padding: '30px 0' }}>
-                            <div className="w-16 h-16 border-4 border-gray-100 border-t-[#17406E] rounded-full animate-spin mb-6" />
-                            <p className="text-gray-900 font-bold text-lg">{editingCaseId ? 'Loading Patient Record...' : 'AI is analyzing interview...'}</p>
-                            <p className="text-gray-400 mt-2">{editingCaseId ? 'Fetching latest data from database' : 'Generating SOAP note & calculating urgency'}</p>
-                        </div>
-                    ) : (
-                        <div className="max-w-3xl mx-auto space-y-10" style={{ background: 'white', margin: '25px', padding: '35px', maxWidth: '-webkit-fill-available', borderRadius: '20px' }}>
-
-                            {/* Section 1: Patient Specifications (Only if editing) */}
-                            {editingCaseId && (
-                                <section>
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-1 h-5 bg-[#17406E]"></div>
-                                        <h3 className="text-xs font-extrabold uppercase tracking-widest" style={{ color: '#17406E', fontWeight: 900 }}>Patient Specifications</h3>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="col-span-1 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Patient Name <span className="text-red-500">*</span></label>
-                                            <input
-                                                className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                                                value={formData.name}
-                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="col-span-1 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Age <span className="text-red-500">*</span></label>
-                                            <input
-                                                className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                                                value={formData.age}
-                                                onChange={e => setFormData({ ...formData, age: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="col-span-1 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Gender</label>
-                                            <div className="relative">
-                                                <select
-                                                    className="w-full appearance-none bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-semibold text-gray-900 focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                                                    value={formData.gender}
-                                                    onChange={e => setFormData({ ...formData, gender: e.target.value })}
-                                                >
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                </select>
-                                                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
-                                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-span-2 space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 ml-1">Chief Complaint</label>
-                                            <input
-                                                disabled
-                                                className="w-full bg-gray-100 text-gray-400 border-transparent rounded-xl px-5 py-4 font-semibold outline-none cursor-not-allowed"
-                                                value={formData.complaint}
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Section 2: Clinical SOAP Note */}
-                            <section>
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-1 h-5 bg-[#17406E]"></div>
-                                    <h3 className="text-xs font-extrabold uppercase tracking-widest" style={{ color: '#17406E', fontWeight: 900 }}>Clinical Assessment & Plan</h3>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-6">
-                                    {/* Subjective */}
-                                    <div className="col-span-2 md:col-span-1 space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 ml-1">Subjective</label>
-                                        <textarea
-                                            className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-medium text-gray-900 text-sm focus:ring-2 focus:ring-black/5 outline-none transition-all resize-none h-40 leading-relaxed"
-                                            value={generatedSoap.subjective}
-                                            onChange={(e) => setGeneratedSoap({ ...generatedSoap, subjective: e.target.value })}
-                                        />
-                                    </div>
-
-                                    {/* Objective */}
-                                    <div className="col-span-2 md:col-span-1 space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 ml-1">Objective</label>
-                                        <textarea
-                                            className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-medium text-gray-900 text-sm focus:ring-2 focus:ring-black/5 outline-none transition-all resize-none h-40 leading-relaxed"
-                                            value={generatedSoap.objective}
-                                            onChange={(e) => setGeneratedSoap({ ...generatedSoap, objective: e.target.value })}
-                                        />
-                                    </div>
-
-                                    {/* Assessment */}
-                                    <div className="col-span-2 space-y-2">
-                                        <label className="text-xs font-bold ml-1" style={{ color: '#17406E' }}>AI Assessment</label>
-                                        <textarea
-                                            className="w-full bg-blue-50/50 border-blue-100/50 rounded-xl px-5 py-4 font-bold text-blue-900 text-lg focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none h-24 leading-relaxed"
-                                            value={generatedSoap.assessment}
-                                            onChange={(e) => setGeneratedSoap({ ...generatedSoap, assessment: e.target.value })}
-                                        />
-                                    </div>
-
-                                    {/* Plan */}
-                                    <div className="col-span-2 space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 ml-1">Suggested Plan</label>
-                                        <textarea
-                                            className="w-full bg-[#f2f2f7] border-transparent rounded-xl px-5 py-4 font-medium text-gray-900 text-sm focus:ring-2 focus:ring-black/5 outline-none transition-all resize-none h-32 leading-relaxed"
-                                            value={generatedSoap.plan}
-                                            onChange={(e) => setGeneratedSoap({ ...generatedSoap, plan: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                            </section>
-
-                        </div>
-                    )}
-                </div>
-
-                <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex justify-end gap-4" style={{ border: 'none', background: 'white' }}>
-                    <button onClick={onDiscard} className="relative inline-flex items-center justify-center text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed font-bold" style={{ border: '1px solid #cfcfcf', padding: '12px 23px', color: '#4b5563', borderRadius: '25px', background: 'white' }}>Discard</button>
-                    <button onClick={onSubmit} disabled={!generatedSoap} className="relative inline-flex items-center justify-center text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed font-bold" style={{ border: '1px solid #17406e', background: '#17406e', padding: '12px 23px', boxShadow: 'none', borderRadius: '25px', color: 'white' }}>
-                        {editingCaseId ? 'Save Changes' : 'Confirm & Submit'}
+                {/* Footer */}
+                <div className="px-8 py-5 flex gap-3" style={{ borderTop: '1px solid #f0f0f0' }}>
+                    <button onClick={onClose} className="flex-1 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleConfirm}
+                        className="flex-1 py-3.5 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-all flex items-center justify-center gap-2"
+                    >
+                        Add Patient
                     </button>
                 </div>
             </div>
-        </div>
+        </AnimatedModal>
     );
 };
 
