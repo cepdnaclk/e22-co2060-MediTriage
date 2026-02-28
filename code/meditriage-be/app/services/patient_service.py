@@ -4,7 +4,7 @@ Business logic for patient management, search, and encounter history.
 """
 from uuid import UUID
 from typing import Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from app.models.patient import Patient
@@ -173,14 +173,32 @@ def soft_delete_patient(patient_id: UUID, db: Session) -> bool:
         
     Raises:
         HTTPException: 404 if patient not found
+        HTTPException: 409 if patient has existing encounter records
     """
     patient = get_patient_by_id(patient_id, db)
-    
-    # For now, we'll use hard delete since Patient model doesn't have is_active field
-    # TODO: Add is_active field to Patient model and implement soft delete
+
+    # Guard: prevent hard delete if patient has linked encounter records
+    # This avoids a foreign key IntegrityError from the database
+    encounter_count = db.query(MedicalEncounter).filter(
+        MedicalEncounter.patient_id == patient_id
+    ).count()
+
+    if encounter_count > 0:
+        logger.warning(
+            f"Delete blocked: patient id={patient_id} has {encounter_count} encounter(s)"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Cannot delete patient: {encounter_count} encounter record(s) exist. "
+                "Remove all encounters before deleting the patient."
+            )
+        )
+
+    # TODO: Add is_active field to Patient model and implement true soft delete
     db.delete(patient)
     db.commit()
-    
+
     logger.info(f"Patient deleted: id={patient_id}")
     return True
 
@@ -203,10 +221,19 @@ def get_patient_encounter_history(patient_id: UUID, db: Session) -> List[Encount
     # Verify patient exists
     get_patient_by_id(patient_id, db)
     
-    # Fetch all encounters for this patient with related data
-    encounters = db.query(MedicalEncounter).filter(
-        MedicalEncounter.patient_id == patient_id
-    ).order_by(MedicalEncounter.encounter_timestamp.desc()).all()
+    # Fetch all encounters for this patient with related data.
+    # Eager-load nurse and doctor to avoid DetachedInstanceError from lazy loading
+    # after the session context changes.
+    encounters = (
+        db.query(MedicalEncounter)
+        .filter(MedicalEncounter.patient_id == patient_id)
+        .options(
+            joinedload(MedicalEncounter.nurse),
+            joinedload(MedicalEncounter.doctor),
+        )
+        .order_by(MedicalEncounter.encounter_timestamp.desc())
+        .all()
+    )
     
     # Build summary list
     history = []

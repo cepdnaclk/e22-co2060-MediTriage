@@ -15,7 +15,7 @@ class PatientCreate(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100, description="First name")
     last_name: str = Field(..., min_length=1, max_length=100, description="Last name")
     date_of_birth: date = Field(..., description="Date of birth")
-    gender: Optional[Gender] = Field(None, description="Gender (MALE, FEMALE, OTHER)")
+    gender: Optional[Gender] = Field(None, description="Gender (MALE, FEMALE, PREFER_NOT_TO_SAY)")
     contact_number: Optional[str] = Field(None, max_length=20, description="Contact phone number")
 
 
