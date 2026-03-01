@@ -7,15 +7,31 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List
 from app.db.session import get_db
-from app.api.dependencies import allow_admin
+from app.api.dependencies import allow_admin, allow_all_authenticated
 from app.models.user import User
-from app.schemas.user import UserListResponse
+from app.schemas.user import UserListResponse, DoctorResponse
 from app.schemas.common import DeleteResponse
 from app.services import user_service
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/users", tags=["User Management"])
+
+
+@router.get("/doctors", response_model=List[DoctorResponse])
+def list_doctors(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_all_authenticated),
+):
+    """
+    Get list of all active doctors.
+    For dropdowns and triage assignment.
+
+    **Required Role**: Any authenticated user (Nurse, Doctor, Admin)
+    """
+    logger.info(f"Listing active doctors, user={current_user.full_name}")
+    doctors = user_service.list_active_doctors(db)
+    return doctors
 
 
 @router.get("", response_model=List[UserListResponse])
