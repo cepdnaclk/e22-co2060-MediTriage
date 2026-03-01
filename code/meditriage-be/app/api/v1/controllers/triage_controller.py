@@ -108,6 +108,7 @@ def list_active_encounters(
                 patient_id=e.patient_id,
                 patient_name=f"{e.patient.first_name} {e.patient.last_name}" if e.patient else None,
                 nurse_id=e.nurse_id,
+                doctor_id=e.doctor_id,
                 status=e.status,
                 is_urgent=e.is_urgent,
                 chief_complaint=e.chief_complaint,
@@ -166,33 +167,39 @@ def get_encounter_messages(
 
 
 @router.patch("/{encounter_id}", response_model=EncounterResponse)
-def update_encounter_urgency(
+def update_encounter(
     encounter_id: UUID,
     data: EncounterUpdateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_nurse),
 ):
     """
-    Update encounter urgency status.
-    Allows nurse to manually flag urgent cases.
+    Update encounter fields: urgency, assigned doctor, and/or status.
+    Called by the Clinical Summary modal when the nurse assigns a doctor
+    and submits the "Add Patient" action.
+
+    Accepts any combination of: is_urgent, doctor_id, status.
 
     **Required Role**: Nurse
     """
-    logger.info(f"Updating encounter urgency: encounter_id={encounter_id}, is_urgent={data.is_urgent}, nurse={current_user.full_name}")
+    logger.info(
+        f"Updating encounter: encounter_id={encounter_id}, "
+        f"doctor_id={data.doctor_id}, status={data.status}, "
+        f"is_urgent={data.is_urgent}, nurse={current_user.full_name}"
+    )
 
     try:
-        if data.is_urgent is not None:
-            encounter = encounter_service.update_encounter_urgency(encounter_id, data.is_urgent, db)
-            return encounter
-        else:
+        if data.is_urgent is None and data.doctor_id is None and data.status is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No update data provided"
             )
+        encounter = encounter_service.update_encounter(encounter_id, data, db)
+        return encounter
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to update encounter urgency: encounter_id={encounter_id}, error={str(e)}", exc_info=True)
+        logger.error(f"Failed to update encounter: encounter_id={encounter_id}, error={str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update encounter"
