@@ -2,14 +2,14 @@
 User/Staff management API controller.
 Handles staff listing and account management (Admin functions).
 """
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List
 from app.db.session import get_db
 from app.api.dependencies import allow_admin, allow_all_authenticated
-from app.models.user import User
-from app.schemas.user import UserListResponse, DoctorResponse
+from app.models.user import User, UserRole
+from app.schemas.user import UserListResponse, DoctorResponse, UserProfileUpdate
 from app.schemas.common import DeleteResponse
 from app.services import user_service
 from app.core.logging import get_logger
@@ -50,6 +50,53 @@ def list_users(
     logger.info(f"Listing users: skip={skip}, limit={limit}, admin={current_user.full_name}")
     users = user_service.list_users(skip, limit, db)
     return users
+
+
+@router.patch("/{user_id}", response_model=UserListResponse)
+def update_user(
+    user_id: UUID,
+    data: UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_all_authenticated),
+):
+    """
+    Update a user's profile (display name, license number).
+
+    **Authorization**: Users may only update their own profile.
+    Admins may update any user's profile.
+
+    **Required Role**: Any authenticated user (self-update), or Admin (any user)
+    """
+    # Enforce self-update unless the caller is an Admin
+    if current_user.id != user_id and current_user.role != UserRole.ADMIN:
+        logger.warning(
+            f"Forbidden profile update attempt: caller_id={current_user.id}, "
+            f"target_id={user_id}, role={current_user.role.value}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update your own profile"
+        )
+
+    logger.info(
+        f"Updating user profile: target_id={user_id}, "
+        f"caller_id={current_user.id}, role={current_user.role.value}"
+    )
+
+    updated_user = user_service.update_user_profile(user_id, data, db)
+
+    logger.info(f"User profile updated successfully: user_id={user_id}")
+
+    return UserListResponse(
+        id=updated_user.id,
+        username=updated_user.auth.username,
+        email=updated_user.auth.email,
+        full_name=updated_user.full_name,
+        role=updated_user.role,
+        license_number=updated_user.license_number,
+        is_active=updated_user.auth.is_active,
+        created_at=updated_user.created_at,
+    )
 
 
 @router.delete("/{user_id}", response_model=DeleteResponse)
