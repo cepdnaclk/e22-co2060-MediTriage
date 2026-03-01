@@ -23,6 +23,7 @@ from app.schemas.clinical import (
     ClinicalNoteResponse,
     ClinicalNoteUpdate,
 )
+from app.models.clinical import MedicalEncounter
 from app.services import triage_engine, encounter_service
 from app.core.logging import get_logger
 
@@ -232,6 +233,8 @@ def update_clinical_note(
     """
     Update clinical note (Doctor edits/approves AI draft).
     Increments version and can finalize the note.
+    When finalized, stamps the doctor_id on the encounter and sets
+    encounter status to COMPLETED.
 
     **Required Role**: Doctor only
     """
@@ -239,7 +242,29 @@ def update_clinical_note(
 
     try:
         note = encounter_service.update_clinical_note(encounter_id, data, current_user, db)
-        return note
+
+        # Fetch encounter to attach its (possibly updated) status & doctor to the response
+        encounter = db.query(MedicalEncounter).filter(
+            MedicalEncounter.id == encounter_id
+        ).first()
+
+        # Build a flat ClinicalNoteResponse with the extra fields populated.
+        # encounter_status and doctor_id are Optional on the schema so existing
+        # frontend code reading other fields is unaffected.
+        return ClinicalNoteResponse(
+            id=note.id,
+            encounter_id=note.encounter_id,
+            subjective=note.subjective,
+            objective=note.objective,
+            assessment=note.assessment,
+            plan=note.plan,
+            is_finalized=note.is_finalized,
+            version=note.version,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            encounter_status=encounter.status.value if encounter else None,
+            doctor_id=encounter.doctor_id if encounter else None,
+        )
     except HTTPException:
         raise
     except Exception as e:
