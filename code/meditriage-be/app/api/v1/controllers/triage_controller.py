@@ -19,6 +19,7 @@ from app.schemas.clinical import (
     MessageResponse,
     EncounterUpdateRequest,
     EncounterResponse,
+    EncounterListItem,
     ClinicalNoteResponse,
     ClinicalNoteUpdate,
 )
@@ -83,6 +84,42 @@ async def triage_chat(
     except Exception as e:
         logger.error(f"Failed to process message for encounter_id={request.encounter_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to process message: {str(e)}")
+
+
+@router.get("/encounters", response_model=List[EncounterListItem])
+def list_active_encounters(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_staff),
+):
+    """
+    Get the global active patient queue for Nurse/Doctor dashboards.
+    Returns all encounters with status TRIAGE_IN_PROGRESS or AWAITING_REVIEW.
+    Ordered: urgent encounters first, then by oldest arrival time.
+
+    **Required Role**: Nurse or Doctor
+    """
+    logger.info(f"Active encounter list requested by user={current_user.full_name}")
+    try:
+        encounters = encounter_service.get_active_encounters(db)
+        return [
+            EncounterListItem(
+                id=e.id,
+                patient_id=e.patient_id,
+                patient_name=e.patient.full_name if e.patient else None,
+                nurse_id=e.nurse_id,
+                status=e.status,
+                is_urgent=e.is_urgent,
+                chief_complaint=e.chief_complaint,
+                encounter_timestamp=e.encounter_timestamp,
+            )
+            for e in encounters
+        ]
+    except Exception as e:
+        logger.error(f"Failed to fetch active encounters: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch active encounter queue"
+        )
 
 
 @router.get("/{encounter_id}/messages", response_model=List[MessageResponse])
