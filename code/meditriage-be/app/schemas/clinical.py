@@ -100,6 +100,9 @@ class ClinicalNoteResponse(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+    # Extra fields populated only on PUT (update) responses — not present on GET
+    encounter_status: Optional[str] = None   # e.g. "COMPLETED" after finalization
+    doctor_id: Optional[UUID] = None         # who finalized the note
 
     class Config:
         from_attributes = True
