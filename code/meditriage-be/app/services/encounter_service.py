@@ -32,7 +32,11 @@ def get_active_encounters(db: Session) -> List[MedicalEncounter]:
     Returns:
         List of MedicalEncounter objects (with .patient relationship loaded)
     """
-    active_statuses = [EncounterStatus.TRIAGE_IN_PROGRESS, EncounterStatus.AWAITING_REVIEW]
+    active_statuses = [
+        EncounterStatus.TRIAGE_IN_PROGRESS,
+        EncounterStatus.AWAITING_REVIEW,
+        EncounterStatus.COMPLETED,
+    ]
     encounters = (
         db.query(MedicalEncounter)
         .filter(MedicalEncounter.status.in_(active_statuses))
@@ -42,7 +46,7 @@ def get_active_encounters(db: Session) -> List[MedicalEncounter]:
         )
         .all()
     )
-    logger.info(f"Active encounter queue fetched: {len(encounters)} encounter(s)")
+    logger.info(f"Encounter queue fetched: {len(encounters)} encounter(s)")
     return encounters
 
 

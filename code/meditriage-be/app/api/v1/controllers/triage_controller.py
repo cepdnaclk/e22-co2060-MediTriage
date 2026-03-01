@@ -124,6 +124,7 @@ def list_active_encounters(
         )
 
 
+
 @router.get("/{encounter_id}/messages", response_model=List[MessageResponse])
 def get_encounter_messages(
     encounter_id: UUID,
