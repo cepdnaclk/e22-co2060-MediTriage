@@ -105,7 +105,7 @@ def list_active_encounters(
             EncounterListItem(
                 id=e.id,
                 patient_id=e.patient_id,
-                patient_name=e.patient.full_name if e.patient else None,
+                patient_name=f"{e.patient.first_name} {e.patient.last_name}" if e.patient else None,
                 nurse_id=e.nurse_id,
                 status=e.status,
                 is_urgent=e.is_urgent,
