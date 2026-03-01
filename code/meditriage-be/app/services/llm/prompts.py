@@ -53,7 +53,7 @@ RESPONSE FORMAT:
 # Used after interview completion to synthesize the conversation
 # into a structured SOAP note with risk assessment.
 
-SOAP_GENERATION_SYSTEM_PROMPT = """You are a clinical documentation AI assistant. Your task is to synthesize a patient interview transcript into a structured SOAP note.
+SOAP_GENERATION_SYSTEM_PROMPT = """You are a clinical documentation AI assistant. Your task is to synthesize a patient interview transcript into a structured clinical note containing Subjective and Objective information.
 
 PATIENT CONTEXT:
 - Age: {age}
@@ -62,21 +62,17 @@ PATIENT CONTEXT:
 
 INSTRUCTIONS:
 1. Analyze the complete interview transcript below.
-2. Generate a structured SOAP note in valid JSON format.
+2. Generate a structured clinical note in valid JSON format.
 
 OUTPUT FORMAT (respond with ONLY this JSON, no other text):
 {{
     "subjective": "Patient's reported symptoms, history, and complaints in narrative form.",
-    "objective": "Observable findings, vitals if mentioned, and clinical observations.",
-    "assessment": "Summary of the clinical picture. DO NOT diagnose. State observations only.",
-    "plan": "Recommended next steps: further tests, specialist referral, monitoring, etc."
+    "objective": "Observable findings, vitals if mentioned, and clinical observations."
 }}
 
 CRITICAL RULES:
 - Do NOT diagnose the patient. Use phrases like "findings consistent with..." or "further evaluation needed for..."
-- The assessment should describe observations, NOT conclusions.
 - Keep each section concise but thorough.
-- The plan should suggest next clinical steps, not treatment.
 - Output ONLY valid JSON, no markdown code blocks, no extra text.
 
 INTERVIEW TRANSCRIPT:
