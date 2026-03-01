@@ -28,3 +28,13 @@ class UserListResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DoctorResponse(BaseModel):
+    """Response schema for doctor listing."""
+    id: UUID
+    full_name: str
+    license_number: Optional[str]
+
+    class Config:
+        from_attributes = True

@@ -6,7 +6,7 @@ from uuid import UUID
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.auth import Auth
 from app.schemas.user import UserProfileUpdate
 from app.core.logging import get_logger
@@ -30,6 +30,27 @@ def list_users(skip: int, limit: int, db: Session) -> List[User]:
     users = db.query(User).offset(skip).limit(limit).all()
     logger.info(f"Retrieved {len(users)} users (skip={skip}, limit={limit})")
     return users
+
+
+def list_active_doctors(db: Session) -> List[User]:
+    """
+    Get list of all active doctors.
+    For triage assignment.
+    
+    Args:
+        db: Database session
+        
+    Returns:
+        List of active User objects where role is DOCTOR
+    """
+    doctors = (
+        db.query(User)
+        .join(Auth, User.id == Auth.user_id)
+        .filter(User.role == UserRole.DOCTOR, Auth.is_active == True)
+        .all()
+    )
+    logger.info(f"Retrieved {len(doctors)} active doctors")
+    return doctors
 
 
 def update_user_profile(user_id: UUID, data: UserProfileUpdate, db: Session) -> User:
