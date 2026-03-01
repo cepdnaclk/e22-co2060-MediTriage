@@ -18,6 +18,34 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 
+def get_active_encounters(db: Session) -> List[MedicalEncounter]:
+    """
+    Return all non-completed encounters for the dashboard queue.
+
+    Statuses included: TRIAGE_IN_PROGRESS, AWAITING_REVIEW
+    Ordering: urgent encounters first, then oldest arrival time first
+    (longest-waiting patient appears at the top within each urgency group).
+
+    Args:
+        db: Database session
+
+    Returns:
+        List of MedicalEncounter objects (with .patient relationship loaded)
+    """
+    active_statuses = [EncounterStatus.TRIAGE_IN_PROGRESS, EncounterStatus.AWAITING_REVIEW]
+    encounters = (
+        db.query(MedicalEncounter)
+        .filter(MedicalEncounter.status.in_(active_statuses))
+        .order_by(
+            MedicalEncounter.is_urgent.desc(),          # urgent first
+            MedicalEncounter.encounter_timestamp.asc()  # oldest arrival first
+        )
+        .all()
+    )
+    logger.info(f"Active encounter queue fetched: {len(encounters)} encounter(s)")
+    return encounters
+
+
 def create_encounter(
     patient_id: UUID,
     nurse_id: UUID,

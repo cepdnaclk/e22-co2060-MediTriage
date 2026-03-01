@@ -34,6 +34,21 @@ class EncounterResponse(BaseModel):
         from_attributes = True
 
 
+class EncounterListItem(BaseModel):
+    """Lightweight response schema for the active encounter queue (dashboard list)."""
+    id: UUID
+    patient_id: UUID
+    patient_name: Optional[str] = None   # denormalized from Patient.full_name
+    nurse_id: UUID
+    status: EncounterStatus
+    is_urgent: bool
+    chief_complaint: Optional[str] = None
+    encounter_timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class EncounterUpdateRequest(BaseModel):
     """Request schema for updating encounter urgency (nurse toggle)."""
     is_urgent: Optional[bool] = Field(None, description="Mark encounter as urgent")

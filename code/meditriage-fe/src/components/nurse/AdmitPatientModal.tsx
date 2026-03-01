@@ -13,6 +13,7 @@ interface AdmitPatientModalProps {
     showToast: (msg: string, type: ToastType) => void;
 }
 
+
 /**
  * Step 2 of patient registration — Demographics Form.
  * Creates patient in DB and starts triage interview.
@@ -140,6 +141,7 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
 
                     {/* DOB */}
                     <div>
+
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth *</label>
                         <input
                             type="date" value={dob}
