@@ -176,6 +176,7 @@ const App: React.FC = () => {
                     careSetting={careSetting}
                     onCareSettingChange={setCareSetting}
                     onAddPatient={handleAddPatientClick}
+                    userRole={currentUser.role}
                 />
             )}
 
