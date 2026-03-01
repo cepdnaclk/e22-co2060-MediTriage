@@ -150,6 +150,56 @@ def update_encounter_urgency(encounter_id: UUID, is_urgent: bool, db: Session) -
     return encounter
 
 
+def update_encounter(
+    encounter_id: UUID,
+    data: EncounterUpdateRequest,
+    db: Session
+) -> MedicalEncounter:
+    """
+    General-purpose encounter update.
+    Handles any combination of: is_urgent, doctor_id, status.
+    Called by the PATCH /{encounter_id} endpoint from the Clinical Summary modal.
+
+    Args:
+        encounter_id: Encounter UUID
+        data: EncounterUpdateRequest (any subset of fields may be set)
+        db: Database session
+
+    Returns:
+        Updated MedicalEncounter
+
+    Raises:
+        HTTPException: 404 if encounter not found
+    """
+    encounter = db.query(MedicalEncounter).filter(
+        MedicalEncounter.id == encounter_id
+    ).first()
+
+    if not encounter:
+        logger.warning(f"Encounter not found for update: id={encounter_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Encounter with ID {encounter_id} not found"
+        )
+
+    if data.is_urgent is not None:
+        encounter.is_urgent = data.is_urgent
+        logger.info(f"Encounter urgency updated: id={encounter_id}, is_urgent={data.is_urgent}")
+
+    if data.doctor_id is not None:
+        encounter.doctor_id = data.doctor_id
+        logger.info(f"Encounter doctor assigned: id={encounter_id}, doctor_id={data.doctor_id}")
+
+    if data.status is not None:
+        encounter.status = data.status
+        logger.info(f"Encounter status updated: id={encounter_id}, status={data.status}")
+
+    db.commit()
+    db.refresh(encounter)
+
+    return encounter
+
+
 def get_clinical_note(encounter_id: UUID, db: Session) -> Optional[ClinicalNote]:
     """
     Fetch SOAP note for an encounter.

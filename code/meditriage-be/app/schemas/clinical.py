@@ -40,6 +40,7 @@ class EncounterListItem(BaseModel):
     patient_id: UUID
     patient_name: Optional[str] = None   # denormalized from Patient.full_name
     nurse_id: UUID
+    doctor_id: Optional[UUID] = None     # assigned doctor (populated after nurse assigns)
     status: EncounterStatus
     is_urgent: bool
     chief_complaint: Optional[str] = None
@@ -50,8 +51,10 @@ class EncounterListItem(BaseModel):
 
 
 class EncounterUpdateRequest(BaseModel):
-    """Request schema for updating encounter urgency (nurse toggle)."""
+    """Request schema for updating encounter fields (urgency toggle and/or doctor assignment)."""
     is_urgent: Optional[bool] = Field(None, description="Mark encounter as urgent")
+    doctor_id: Optional[UUID] = Field(None, description="Assign a doctor to this encounter")
+    status: Optional[EncounterStatus] = Field(None, description="Update encounter status")
 
 
 # ==================== Triage Interaction Schemas ====================
