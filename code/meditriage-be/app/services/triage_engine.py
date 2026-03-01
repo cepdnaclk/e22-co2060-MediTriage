@@ -190,8 +190,8 @@ async def process_message(
             encounter_id=encounter.id,
             subjective=soap_note.subjective,
             objective=soap_note.objective,
-            assessment=soap_note.assessment,
-            plan=soap_note.plan,
+            assessment="",
+            plan="",
             is_finalized=False,
             version=1,
         )
@@ -203,8 +203,8 @@ async def process_message(
         soap_note_schema = SOAPNoteSchema(
             subjective=soap_note.subjective,
             objective=soap_note.objective,
-            assessment=soap_note.assessment,
-            plan=soap_note.plan,
+            assessment="",
+            plan="",
         )
 
         logger.info(f"SOAP note created for encounter {encounter.id}")

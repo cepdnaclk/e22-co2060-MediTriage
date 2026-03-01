@@ -91,10 +91,10 @@ class LLMOutputParser:
             )
 
         # Validate required fields
-        required_fields = ["subjective", "objective", "assessment", "plan"]
+        required_fields = ["subjective", "objective"]
         for field in required_fields:
             if field not in data:
-                logger.warning(f"Missing field '{field}' in SOAP note, using empty string.")
+                logger.warning(f"Missing field '{field}' in clinical note, using empty string.")
 
         return SOAPNote(
             subjective=data.get("subjective", ""),
