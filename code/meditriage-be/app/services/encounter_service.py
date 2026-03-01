@@ -219,12 +219,13 @@ def update_clinical_note(
         if field == "is_finalized" and value:
             # Mark as finalized
             note.is_finalized = True
-            # Update encounter status to COMPLETED
+            # Update encounter status to COMPLETED and stamp the doctor
             encounter = db.query(MedicalEncounter).filter(
                 MedicalEncounter.id == encounter_id
             ).first()
             if encounter:
                 encounter.status = EncounterStatus.COMPLETED
+                encounter.doctor_id = current_user.id  # audit trail: who finalized
         else:
             setattr(note, field, value)
     
