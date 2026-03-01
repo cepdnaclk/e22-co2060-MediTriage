@@ -79,6 +79,7 @@ const App: React.FC = () => {
                     gender: enc.patient_gender || '',
                     chiefComplaint: enc.chief_complaint || '',
                     nurseId: '',
+                    doctorId: enc.doctor_id || undefined,
                     doctorName: enc.doctor_name || undefined,
                     startTime: new Date(enc.encounter_timestamp).getTime(),
                     status,

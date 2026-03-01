@@ -35,7 +35,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
     const [isSaving, setIsSaving] = useState(false);
 
     // Filter cases assigned to THIS doctor
-    const myCases = activeCases.filter(c => c.doctorName === user.name);
+    const myCases = activeCases.filter(c => c.doctorId === user.id);
 
     const treatedToday = myCases.filter(c => c.status === TriageStatus.COMPLETED);
     const waitingPatients = myCases.filter(c => c.status !== TriageStatus.COMPLETED);

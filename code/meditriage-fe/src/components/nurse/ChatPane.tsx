@@ -136,12 +136,12 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
     };
 
     // Review confirmed — add patient to queue with doctor assignment
-    const handleReviewConfirm = async (doctorName: string) => {
+    const handleReviewConfirm = async (doctorId: string, doctorName: string) => {
         // Persist doctor assignment and status to backend
         if (encounterId) {
             try {
                 await triageService.updateEncounter(encounterId, {
-                    doctor_name: doctorName,
+                    doctor_id: doctorId,
                     status: 'AWAITING_REVIEW',
                 });
             } catch {
@@ -153,13 +153,14 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             onAddCase({
                 ...pendingCase,
                 status: TriageStatus.AWAITING_REVIEW,
+                doctorId,
                 doctorName,
             });
             onClearPendingCase();
         } else {
             const existing = cases.find(c => c.id === encounterId || c.encounterId === encounterId);
             if (existing) {
-                onUpdateCase({ ...existing, status: TriageStatus.AWAITING_REVIEW, doctorName });
+                onUpdateCase({ ...existing, status: TriageStatus.AWAITING_REVIEW, doctorId, doctorName });
             }
         }
         setShowReview(false);

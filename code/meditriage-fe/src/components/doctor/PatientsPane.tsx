@@ -48,7 +48,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
     const [showDetailModal, setShowDetailModal] = useState(false);
 
     // Filter logic to ONLY show this doctor's patients
-    const myCases = cases.filter(c => c.doctorName === user.name);
+    const myCases = cases.filter(c => c.doctorId === user.id);
 
     const filteredCases = myCases.filter(c => {
         const term = search.toLowerCase();
