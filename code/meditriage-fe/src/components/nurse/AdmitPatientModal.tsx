@@ -109,112 +109,127 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
     const inputBg = { background: '#f0f2f7', border: '2px solid transparent' };
 
     return (
-        <AnimatedModal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-xl" zIndex={70}>
-            <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
-                {/* Header */}
-                <div className="px-8 pt-8 pb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Add Patient</h3>
-                    <p className="text-sm text-gray-500 mt-1">Enter the patient's demographic information</p>
-                </div>
-
-                {/* Form */}
-                <div className="px-8 pb-4 space-y-4" style={{ maxHeight: '55vh', overflowY: 'auto' }}>
-                    {/* Name Row */}
-                    <div className="grid grid-cols-2 gap-4">
+        <>
+            <AnimatedModal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-xl" zIndex={70}>
+                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden relative">
+                    {/* Header */}
+                    <div className="px-8 pt-6 pb-4 flex justify-between items-start" style={{ borderBottom: '1px solid rgb(240, 240, 240)' }}>
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">First Name *</label>
+                            <h3 className="text-xl font-bold text-gray-900">Add Patient</h3>
+                            <p className="text-sm text-gray-500 mt-1">Enter the patient's demographic information</p>
+                        </div>
+                        <button
+                            onClick={handleClose}
+                            className="p-2 relative -right-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                            aria-label="Close"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Form */}
+                    <div className="px-8 py-6 space-y-4" style={{ maxHeight: '55vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                        {/* Name Row */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">First Name <span style={{ color: 'red' }}>*</span></label>
+                                <input
+                                    type="text" placeholder="First Name" value={firstName} required
+                                    onChange={e => setFirstName(e.target.value)}
+                                    className={inputStyle} style={inputBg}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Last Name <span style={{ color: 'red' }}>*</span></label>
+                                <input
+                                    type="text" placeholder="Last Name" value={lastName} required
+                                    onChange={e => setLastName(e.target.value)}
+                                    className={inputStyle} style={inputBg}
+                                />
+                            </div>
+                        </div>
+
+                        {/* DOB */}
+                        <div>
+
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth <span style={{ color: 'red' }}>*</span></label>
                             <input
-                                type="text" placeholder="First Name" value={firstName}
-                                onChange={e => setFirstName(e.target.value)}
+                                required
+                                type="date" value={dob}
+                                onChange={e => setDob(e.target.value)}
                                 className={inputStyle} style={inputBg}
                             />
                         </div>
+
+                        {/* Gender Radio */}
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Last Name *</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">Gender <span style={{ color: 'red' }}>*</span></label>
+                            <div className="flex gap-4">
+                                {[
+                                    { value: 'MALE', label: 'Male' },
+                                    { value: 'FEMALE', label: 'Female' },
+                                    { value: 'OTHER', label: 'Prefer Not to Say' },
+                                ].map(opt => (
+                                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${gender === opt.value ? 'border-[#17406E] bg-[#17406E]' : 'border-gray-300 group-hover:border-gray-400'}`}>
+                                            {gender === opt.value && <div className="w-2 h-2 bg-white rounded-full" />}
+                                        </div>
+                                        <input type="radio" name="gender" required value={opt.value} checked={gender === opt.value} onChange={e => setGender(e.target.value)} className="hidden" />
+                                        <span className="text-sm font-medium text-gray-700">{opt.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Contact */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact Number</label>
                             <input
-                                type="text" placeholder="Last Name" value={lastName}
-                                onChange={e => setLastName(e.target.value)}
+                                type="tel" placeholder="Phone number" value={contactNo}
+                                onChange={e => setContactNo(e.target.value)}
                                 className={inputStyle} style={inputBg}
+                            />
+                        </div>
+
+                        {/* Chief Complaint */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Chief Complaint <span style={{ color: 'red' }}>*</span></label>
+                            <textarea
+                                required
+                                placeholder="Describe the primary reason for visit"
+                                value={chiefComplaint}
+                                onChange={e => setChiefComplaint(e.target.value)}
+                                rows={3}
+                                className={`${inputStyle} resize-none`} style={inputBg}
                             />
                         </div>
                     </div>
 
-                    {/* DOB */}
-                    <div>
-
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth *</label>
-                        <input
-                            type="date" value={dob}
-                            onChange={e => setDob(e.target.value)}
-                            className={inputStyle} style={inputBg}
-                        />
-                    </div>
-
-                    {/* Gender Radio */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">Gender</label>
-                        <div className="flex gap-4">
-                            {[
-                                { value: 'MALE', label: 'Male' },
-                                { value: 'FEMALE', label: 'Female' },
-                                { value: 'OTHER', label: 'Prefer not to say' },
-                            ].map(opt => (
-                                <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${gender === opt.value ? 'border-[#17406E] bg-[#17406E]' : 'border-gray-300 group-hover:border-gray-400'}`}>
-                                        {gender === opt.value && <div className="w-2 h-2 bg-white rounded-full" />}
-                                    </div>
-                                    <input type="radio" name="gender" value={opt.value} checked={gender === opt.value} onChange={e => setGender(e.target.value)} className="hidden" />
-                                    <span className="text-sm font-medium text-gray-700">{opt.label}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Contact */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact Number</label>
-                        <input
-                            type="tel" placeholder="Phone number" value={contactNo}
-                            onChange={e => setContactNo(e.target.value)}
-                            className={inputStyle} style={inputBg}
-                        />
-                    </div>
-
-                    {/* Chief Complaint */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Chief Complaint *</label>
-                        <textarea
-                            placeholder="Describe the primary reason for visit"
-                            value={chiefComplaint}
-                            onChange={e => setChiefComplaint(e.target.value)}
-                            rows={3}
-                            className={`${inputStyle} resize-none`} style={inputBg}
-                        />
+                    {/* Footer */}
+                    <div className="px-8 py-5 flex gap-3" style={{ borderTop: '1px solid #f0f0f0' }}>
+                        <button onClick={handleClose} className="flex-1 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="flex-1 py-3.5 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Starting...
+                                </>
+                            ) : (
+                                'Start Triage Interview'
+                            )}
+                        </button>
                     </div>
                 </div>
-
-                {/* Footer */}
-                <div className="px-8 py-5 flex gap-3" style={{ borderTop: '1px solid #f0f0f0' }}>
-                    <button onClick={handleClose} className="flex-1 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="flex-1 py-3.5 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Starting...
-                            </>
-                        ) : (
-                            'Start Triage Interview'
-                        )}
-                    </button>
-                </div>
-            </div>
-        </AnimatedModal>
+            </AnimatedModal>
+        </>
     );
 };
 

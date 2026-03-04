@@ -184,7 +184,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
     return (
         <div className="flex flex-col h-full relative bg-[#f2f2f7] animate-fade-in font-sans" style={{ margin: '-20px', height: 'calc(100vh - 15px)' }}>
             {/* Header */}
-            <div className="px-6 py-4 flex justify-between items-center bg-[#f2f2f7] sticky top-0 z-20">
+            <div className="px-6 py-4 pt-8 flex justify-between items-center bg-[#f2f2f7] sticky top-0 z-20">
                 <div className="flex items-center" style={{ gap: '10px' }}>
                     <img src="/assets/branding/MediTriageAI.png" alt="MediTriage AI" className="rounded-full object-cover" style={{ width: '3.5rem', height: '3.5rem' }} />
                     <div>
@@ -236,10 +236,9 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
                             <div className="w-8 h-8 bg-[#17406E] rounded-full flex-shrink-0 flex items-center justify-center mt-1">
                                 <svg className="w-[18px] h-[18px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="8" width="16" height="12" rx="3" /><line x1="12" y1="2" x2="12" y2="8" /><circle cx="12" cy="2" r="1.5" fill="currentColor" /><circle cx="9" cy="13.5" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="13.5" r="1.5" fill="currentColor" stroke="none" /><path d="M9.5 17.5a2.5 2.5 0 005 0" /><line x1="1" y1="13" x2="4" y2="13" /><line x1="20" y1="13" x2="23" y2="13" /></svg>
                             </div>
-                            <div className="bg-white shadow-sm border border-gray-100 flex items-center gap-2" style={{ borderRadius: '20px', padding: '15px 20px' }}>
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75" />
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
+                            <div className="bg-white shadow-sm border border-gray-100 flex items-center gap-2.5" style={{ borderRadius: '20px', padding: '12px 20px' }}>
+                                <div className="w-4 h-4 border-2 border-gray-300 border-t-[#17406E] rounded-full animate-spin" />
+                                <span className="text-sm font-semibold text-gray-500">Thinking...</span>
                             </div>
                         </div>
                     )}
@@ -248,7 +247,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             </div>
 
             {/* Input Area */}
-            <div className="absolute bottom-0 left-0 right-0 px-0 py-[10px] pb-[25px] z-30 bg-[#f2f2f7]">
+            <div className="absolute bottom-0 left-0 right-0 px-0 py-[10px] pb-[15px] z-30 bg-[#f2f2f7]">
                 <div className="max-w-3xl mx-auto w-full">
                     <div className="relative flex items-center bg-white rounded-full p-2 pl-6 shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-black/5 focus-within:border-black/10 transition-all">
                         <input
