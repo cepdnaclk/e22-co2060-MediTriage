@@ -7,8 +7,7 @@ export enum UserRole {
 
 export enum CareSetting {
     OPD = 'OPD',
-    WARD_A = 'WARD_A',
-    WARD_B = 'WARD_B',
+    WARD = 'WARD',
 }
 
 export enum UrgencyLevel {

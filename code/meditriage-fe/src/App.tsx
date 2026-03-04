@@ -15,6 +15,11 @@ import * as authService from './services/authService';
 import * as triageService from './services/triageService';
 import { getToken } from './services/api';
 
+// -- Doctor Components --
+import DoctorOverviewPane from './components/doctor/OverviewPane';
+import DoctorPatientsPane from './components/doctor/PatientsPane';
+import DoctorSettingsPane from './components/doctor/SettingsPane';
+
 const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [cases, setCases] = useState<PatientCase[]>([]);
@@ -74,6 +79,7 @@ const App: React.FC = () => {
                     gender: enc.patient_gender || '',
                     chiefComplaint: enc.chief_complaint || '',
                     nurseId: '',
+                    doctorId: enc.doctor_id || undefined,
                     doctorName: enc.doctor_name || undefined,
                     startTime: new Date(enc.encounter_timestamp).getTime(),
                     status,
@@ -153,7 +159,9 @@ const App: React.FC = () => {
 
     /* ── Authenticated Layout ─────────────────────── */
 
-    const waitingCount = cases.filter(c => c.status !== TriageStatus.COMPLETED).length;
+    const waitingCount = currentUser.role === UserRole.DOCTOR
+        ? cases.filter(c => c.status !== TriageStatus.COMPLETED && c.doctorName === currentUser.name).length
+        : cases.filter(c => c.status !== TriageStatus.COMPLETED).length;
 
     return (
         <div className="flex h-screen w-full bg-[#f2f2f7] font-sans text-gray-900 overflow-hidden">
@@ -169,6 +177,7 @@ const App: React.FC = () => {
                     careSetting={careSetting}
                     onCareSettingChange={setCareSetting}
                     onAddPatient={handleAddPatientClick}
+                    userRole={currentUser.role}
                 />
             )}
 
@@ -176,38 +185,73 @@ const App: React.FC = () => {
             <main className={`flex-1 ml-[19rem] h-full relative overflow-y-auto ${isChatRoute ? 'pt-0' : 'pt-[80px]'}`}>
                 <div className="p-8">
                     <Routes>
-                        <Route path="/overview" element={
-                            <OverviewPane
-                                activeCases={cases}
-                                careSetting={careSetting}
-                                user={currentUser}
-                                onNavigate={(view: string) => navigate(`/${view}`)}
-                                showToast={showToast}
-                                onRemoveCase={handleRemoveCase}
-                            />
-                        } />
-                        <Route path="/patients" element={
-                            <PatientsPane
-                                cases={cases}
-                                user={currentUser}
-                                showToast={showToast}
-                                onRemoveCase={handleRemoveCase}
-                            />
-                        } />
-                        <Route path="/settings" element={<SettingsPane user={currentUser} onLogout={handleLogout} />} />
-                        <Route path="/chat/:encounterId" element={
-                            <ChatPane
-                                user={currentUser}
-                                cases={cases}
-                                pendingCase={pendingCase}
-                                onAddCase={handleAddCase}
-                                onUpdateCase={handleUpdateCase}
-                                onRemoveCase={handleRemoveCase}
-                                onClearPendingCase={() => setPendingCase(null)}
-                                showToast={showToast}
-                            />
-                        } />
-                        <Route path="*" element={<Navigate to="/overview" replace />} />
+                        {currentUser.role === UserRole.DOCTOR ? (
+                            <>
+                                <Route path="/overview" element={
+                                    <DoctorOverviewPane
+                                        activeCases={cases}
+                                        careSetting={careSetting}
+                                        user={currentUser}
+                                        onNavigate={(view: string) => navigate(`/${view}`)}
+                                        showToast={showToast}
+                                        onRemoveCase={handleRemoveCase}
+                                        onUpdateCase={handleUpdateCase}
+                                    />
+                                } />
+                                <Route path="/patients" element={
+                                    <DoctorPatientsPane
+                                        cases={cases}
+                                        user={currentUser}
+                                        showToast={showToast}
+                                        onRemoveCase={handleRemoveCase}
+                                        onUpdateCase={handleUpdateCase}
+                                    />
+                                } />
+                                <Route path="/settings" element={
+                                    <DoctorSettingsPane
+                                        user={currentUser}
+                                        onLogout={handleLogout}
+                                        showToast={showToast}
+                                    />
+                                } />
+                                <Route path="*" element={<Navigate to="/overview" replace />} />
+                            </>
+                        ) : (
+                            <>
+                                <Route path="/overview" element={
+                                    <OverviewPane
+                                        activeCases={cases}
+                                        careSetting={careSetting}
+                                        user={currentUser}
+                                        onNavigate={(view: string) => navigate(`/${view}`)}
+                                        showToast={showToast}
+                                        onRemoveCase={handleRemoveCase}
+                                    />
+                                } />
+                                <Route path="/patients" element={
+                                    <PatientsPane
+                                        cases={cases}
+                                        user={currentUser}
+                                        showToast={showToast}
+                                        onRemoveCase={handleRemoveCase}
+                                    />
+                                } />
+                                <Route path="/settings" element={<SettingsPane />} />
+                                <Route path="/chat/:encounterId" element={
+                                    <ChatPane
+                                        user={currentUser}
+                                        cases={cases}
+                                        pendingCase={pendingCase}
+                                        onAddCase={handleAddCase}
+                                        onUpdateCase={handleUpdateCase}
+                                        onRemoveCase={handleRemoveCase}
+                                        onClearPendingCase={() => setPendingCase(null)}
+                                        showToast={showToast}
+                                    />
+                                } />
+                                <Route path="*" element={<Navigate to="/overview" replace />} />
+                            </>
+                        )}
                     </Routes>
                 </div>
             </main>

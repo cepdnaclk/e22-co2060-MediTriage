@@ -13,6 +13,8 @@ interface PatientDetailModalProps {
     patient: PatientCase | null;
     showToast: (msg: string, type: ToastType) => void;
     onRemoveCase: (id: string) => void;
+    userRole?: string;
+    onStartDiagnosing?: (patient: PatientCase) => void;
 }
 
 const HISTORY_PAGE_SIZE = 3;
@@ -26,7 +28,7 @@ const getStatusLabel = (status: TriageStatus) => {
     }
 };
 
-const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose, patient, showToast, onRemoveCase }) => {
+const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose, patient, showToast, onRemoveCase, userRole, onStartDiagnosing }) => {
     const [history, setHistory] = useState<patientService.EncounterSummary[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -235,12 +237,24 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                                 {patient.encounterId && (
                                     <>
                                         <div className="h-px bg-gray-200/60" />
-                                        <button
-                                            onClick={() => handleViewSoapNote(patient.encounterId!, patient.doctorName || '')}
-                                            className="w-full py-2.5 text-sm font-bold text-[#17406E] bg-white rounded-full border border-[#17406E]/15 hover:bg-[#17406E]/5 transition-colors"
-                                        >
-                                            View Record
-                                        </button>
+                                        {(userRole === 'DOCTOR' && patient.status === TriageStatus.AWAITING_REVIEW && onStartDiagnosing) ? (
+                                            <button
+                                                onClick={() => {
+                                                    onClose();
+                                                    onStartDiagnosing(patient);
+                                                }}
+                                                className="w-full py-2.5 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all"
+                                            >
+                                                Start Diagnosing
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleViewSoapNote(patient.encounterId!, patient.doctorName || '')}
+                                                className="w-full py-2.5 text-sm font-bold text-[#17406E] bg-white rounded-full border border-[#17406E]/15 hover:bg-[#17406E]/5 transition-colors"
+                                            >
+                                                View Record
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </div>

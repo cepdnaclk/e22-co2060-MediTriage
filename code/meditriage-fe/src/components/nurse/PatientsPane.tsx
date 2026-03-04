@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PatientCase, TriageStatus, User } from '../../types';
 import CustomSelect from '../ui/CustomSelect';
-import PatientDetailModal from './PatientDetailModal';
+import PatientDetailModal from '../shared/PatientDetailModal';
 import { ToastType } from '../ui/Toast';
 
 interface PatientsPaneProps {
