@@ -117,6 +117,10 @@ const App: React.FC = () => {
         setCases(prev => prev.filter(c => c.id !== caseId));
     }, []);
 
+    const handleUpdateUser = useCallback((updatedUser: User) => {
+        setCurrentUser(updatedUser);
+    }, []);
+
     // Patient registration flow
     const handleAddPatientClick = () => {
         setPrefillPatient(null);
@@ -211,6 +215,7 @@ const App: React.FC = () => {
                                     <DoctorSettingsPane
                                         user={currentUser}
                                         onLogout={handleLogout}
+                                        onUpdateUser={handleUpdateUser}
                                         showToast={showToast}
                                     />
                                 } />
@@ -236,7 +241,14 @@ const App: React.FC = () => {
                                         onRemoveCase={handleRemoveCase}
                                     />
                                 } />
-                                <Route path="/settings" element={<SettingsPane />} />
+                                <Route path="/settings" element={
+                                    <SettingsPane
+                                        user={currentUser}
+                                        onLogout={handleLogout}
+                                        onUpdateUser={handleUpdateUser}
+                                        showToast={showToast}
+                                    />
+                                } />
                                 <Route path="/chat/:encounterId" element={
                                     <ChatPane
                                         user={currentUser}
