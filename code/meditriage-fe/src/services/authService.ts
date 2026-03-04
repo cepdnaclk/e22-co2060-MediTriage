@@ -47,6 +47,12 @@ export const getCurrentUser = async () => {
     return mapUser(userRaw);
 };
 
+// Update user profile (e.g. settings)
+export const updateUserProfile = async (userId: string, data: { full_name?: string }) => {
+    const userRaw = await api.patch<BackendUserResponse>(`/users/${userId}`, data);
+    return mapUser(userRaw);
+};
+
 // Logout — clear token
 export const logout = () => {
     setToken(null);
