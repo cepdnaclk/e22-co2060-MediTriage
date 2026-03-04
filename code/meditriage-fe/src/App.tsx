@@ -87,7 +87,8 @@ const App: React.FC = () => {
                     encounterId: enc.id,
                 };
             });
-            setCases(mapped);
+            const sorted = mapped.sort((a, b) => b.startTime - a.startTime);
+            setCases(sorted);
         }).catch(() => { });
     }, [currentUser]);
 
