@@ -194,7 +194,7 @@ const App: React.FC = () => {
                                 onRemoveCase={handleRemoveCase}
                             />
                         } />
-                        <Route path="/settings" element={<SettingsPane />} />
+                        <Route path="/settings" element={<SettingsPane user={currentUser} onLogout={handleLogout} />} />
                         <Route path="/chat/:encounterId" element={
                             <ChatPane
                                 user={currentUser}
