@@ -102,9 +102,9 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
         if (!selectedPatient) return;
         setIsSaving(true);
         try {
-            await triageService.updateEncounter(selectedPatient.id, {
-                status: 'COMPLETED', // Mark as treated
-                ...noteData // Save the SOAP changes
+            await triageService.updateClinicalNote(selectedPatient.id, {
+                is_finalized: true, // Backend automatically stamps doctor_id and sets status to COMPLETED
+                ...noteData
             });
             showToast('Diagnosis saved and patient treated', 'success');
             setShowModal(false);
