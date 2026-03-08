@@ -126,3 +126,8 @@ export interface EncounterListItem {
 export const listEncounters = async (): Promise<EncounterListItem[]> => {
     return api.get<EncounterListItem[]>('/triage/encounters');
 };
+
+// Cancel (permanently delete) an abandoned triage encounter (Nurse only)
+export const deleteEncounter = async (encounterId: string): Promise<void> => {
+    await api.delete(`/triage/${encounterId}`);
+};
