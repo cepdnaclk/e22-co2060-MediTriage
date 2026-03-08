@@ -71,8 +71,8 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
         if (!selectedPatient) return;
         setIsSaving(true);
         try {
-            await triageService.updateEncounter(selectedPatient.id, {
-                status: 'COMPLETED',
+            await triageService.updateClinicalNote(selectedPatient.id, {
+                is_finalized: true,
                 ...noteData
             });
             showToast('Diagnosis saved and patient treated', 'success');
@@ -91,8 +91,10 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
         }
     };
 
-    // Recent Admissions (slice to get max 5)
-    const recentAdmissions = myCases.slice(0, 5);
+    // Recent Assignments (sorted by most recent encounter, max 5)
+    const recentAdmissions = [...myCases]
+        .sort((a, b) => b.startTime - a.startTime)
+        .slice(0, 5);
 
     const getStatusLabel = (status: TriageStatus) => {
         switch (status) {

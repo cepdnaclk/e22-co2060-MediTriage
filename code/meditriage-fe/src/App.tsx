@@ -87,7 +87,8 @@ const App: React.FC = () => {
                     encounterId: enc.id,
                 };
             });
-            setCases(mapped);
+            const sorted = mapped.sort((a, b) => b.startTime - a.startTime);
+            setCases(sorted);
         }).catch(() => { });
     }, [currentUser]);
 
@@ -115,6 +116,10 @@ const App: React.FC = () => {
 
     const handleRemoveCase = useCallback((caseId: string) => {
         setCases(prev => prev.filter(c => c.id !== caseId));
+    }, []);
+
+    const handleUpdateUser = useCallback((updatedUser: User) => {
+        setCurrentUser(updatedUser);
     }, []);
 
     // Patient registration flow
@@ -211,6 +216,7 @@ const App: React.FC = () => {
                                     <DoctorSettingsPane
                                         user={currentUser}
                                         onLogout={handleLogout}
+                                        onUpdateUser={handleUpdateUser}
                                         showToast={showToast}
                                     />
                                 } />
@@ -236,7 +242,14 @@ const App: React.FC = () => {
                                         onRemoveCase={handleRemoveCase}
                                     />
                                 } />
-                                <Route path="/settings" element={<SettingsPane />} />
+                                <Route path="/settings" element={
+                                    <SettingsPane
+                                        user={currentUser}
+                                        onLogout={handleLogout}
+                                        onUpdateUser={handleUpdateUser}
+                                        showToast={showToast}
+                                    />
+                                } />
                                 <Route path="/chat/:encounterId" element={
                                     <ChatPane
                                         user={currentUser}

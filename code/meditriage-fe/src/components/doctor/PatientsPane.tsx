@@ -63,7 +63,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
             if (dateFilter === 'Last 30 Days' && diffDays > 30) return false;
         }
         return true;
-    });
+    }).sort((a, b) => b.startTime - a.startTime);
 
     const visibleCases = filteredCases.slice(0, visibleCount);
     const remaining = filteredCases.length - visibleCount;
@@ -102,9 +102,9 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
         if (!selectedPatient) return;
         setIsSaving(true);
         try {
-            await triageService.updateEncounter(selectedPatient.id, {
-                status: 'COMPLETED', // Mark as treated
-                ...noteData // Save the SOAP changes
+            await triageService.updateClinicalNote(selectedPatient.id, {
+                is_finalized: true, // Backend automatically stamps doctor_id and sets status to COMPLETED
+                ...noteData
             });
             showToast('Diagnosis saved and patient treated', 'success');
             setShowModal(false);

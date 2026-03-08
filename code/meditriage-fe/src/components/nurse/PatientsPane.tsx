@@ -50,7 +50,7 @@ const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onR
             if (dateFilter === 'Last 30 Days' && diffDays > 30) return false;
         }
         return true;
-    });
+    }).sort((a, b) => b.startTime - a.startTime);
 
     const visibleCases = filteredCases.slice(0, visibleCount);
     const remaining = filteredCases.length - visibleCount;

@@ -60,6 +60,7 @@ const OverviewPane: React.FC<OverviewPaneProps> = ({ activeCases, careSetting, u
     const waiting = activeCases.filter(c => c.status === TriageStatus.IN_PROGRESS || c.status === TriageStatus.AWAITING_REVIEW);
     const uniqueDoctors = new Set(activeCases.map(c => c.doctorName).filter(Boolean));
     const nurseTriages = activeCases.filter(c => c.nurseId === user.id);
+    const sortedCases = [...activeCases].sort((a, b) => b.startTime - a.startTime);
 
     // Loading spinner during care setting switch
     if (isTransitioning) {
@@ -139,7 +140,7 @@ const OverviewPane: React.FC<OverviewPaneProps> = ({ activeCases, careSetting, u
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {activeCases.slice(0, 5).map(c => {
+                            {sortedCases.slice(0, 5).map(c => {
                                 const badge = getStatusInfo(c.status);
                                 return (
                                     <tr key={c.id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer" onClick={() => handleViewPatient(c)}>
@@ -157,7 +158,7 @@ const OverviewPane: React.FC<OverviewPaneProps> = ({ activeCases, careSetting, u
                                     </tr>
                                 );
                             })}
-                            {activeCases.length === 0 && (
+                            {sortedCases.length === 0 && (
                                 <tr><td colSpan={4} className="p-8 text-center text-gray-400">No patients in queue.</td></tr>
                             )}
                         </tbody>
