@@ -181,9 +181,14 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
         setShowCancelConfirm(true);
     };
 
-    const handleConfirmCancel = () => {
-        // Remove case from local state so it never shows anywhere
+    const handleConfirmCancel = async () => {
+        // Delete the abandoned encounter from the backend
         if (encounterId) {
+            try {
+                await triageService.deleteEncounter(encounterId);
+            } catch {
+                // Continue even if delete fails — still navigate away
+            }
             onRemoveCase(encounterId);
         }
         setShowCancelConfirm(false);
@@ -293,7 +298,19 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             {/* Review SOAP */}
             <ReviewModal
                 isOpen={showReview}
-                onClose={() => { setShowReview(false); navigate('/overview'); }}
+                onClose={async () => {
+                    // Delete the abandoned encounter from the backend
+                    if (encounterId) {
+                        try {
+                            await triageService.deleteEncounter(encounterId);
+                        } catch {
+                            // Continue even if delete fails
+                        }
+                        onRemoveCase(encounterId);
+                    }
+                    setShowReview(false);
+                    navigate('/overview');
+                }}
                 onConfirm={handleReviewConfirm}
                 subjective={soapData.subjective}
                 objective={soapData.objective}

@@ -204,6 +204,56 @@ def update_encounter(
     return encounter
 
 
+def delete_encounter(encounter_id: UUID, db: Session) -> None:
+    """
+    Permanently delete an abandoned triage encounter and all its children.
+
+    Only encounters in TRIAGE_IN_PROGRESS status may be deleted.
+    Encounters that are AWAITING_REVIEW or COMPLETED are active clinical
+    records and must not be removed through this path.
+
+    SQLAlchemy cascade="all, delete-orphan" on the relationships ensures
+    that all associated TriageInteraction and ClinicalNote rows are
+    automatically deleted when the parent MedicalEncounter is removed.
+
+    Args:
+        encounter_id: UUID of the encounter to delete
+        db: Database session
+
+    Raises:
+        HTTPException 404: Encounter not found
+        HTTPException 409: Encounter is not in TRIAGE_IN_PROGRESS status
+    """
+    encounter = db.query(MedicalEncounter).filter(
+        MedicalEncounter.id == encounter_id
+    ).first()
+
+    if not encounter:
+        logger.warning(f"Encounter not found for deletion: id={encounter_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Encounter with ID {encounter_id} not found"
+        )
+
+    if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
+        logger.warning(
+            f"Attempted to delete non-cancellable encounter: "
+            f"id={encounter_id}, status={encounter.status.value}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Cannot cancel encounter in '{encounter.status.value}' status. "
+                "Only TRIAGE_IN_PROGRESS encounters can be deleted."
+            )
+        )
+
+    db.delete(encounter)
+    db.commit()
+
+    logger.info(f"Encounter deleted (cancelled): id={encounter_id}")
+
+
 def get_clinical_note(encounter_id: UUID, db: Session) -> Optional[ClinicalNote]:
     """
     Fetch SOAP note for an encounter.
