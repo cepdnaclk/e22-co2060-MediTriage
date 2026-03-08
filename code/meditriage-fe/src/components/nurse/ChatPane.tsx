@@ -136,9 +136,18 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
     };
 
     // Review confirmed — add patient to queue with doctor assignment
-    const handleReviewConfirm = async (doctorId: string, doctorName: string) => {
-        // Persist doctor assignment and status to backend
+    const handleReviewConfirm = async (doctorId: string, doctorName: string, editedSubjective: string, editedObjective: string) => {
+        // Persist nurse's SOAP edits and doctor assignment to backend
         if (encounterId) {
+            try {
+                // Save nurse-edited Subjective & Objective to the clinical note
+                await triageService.updateClinicalNote(encounterId, {
+                    subjective: editedSubjective,
+                    objective: editedObjective,
+                });
+            } catch {
+                // Continue even if note update fails — local state update is the priority
+            }
             try {
                 await triageService.updateEncounter(encounterId, {
                     doctor_id: doctorId,

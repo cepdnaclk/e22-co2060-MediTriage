@@ -8,7 +8,7 @@ import * as triageService from "../../services/triageService";
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (doctorId: string, doctorName: string) => void;
+  onConfirm: (doctorId: string, doctorName: string, editedSubjective: string, editedObjective: string) => void;
   subjective: string;
   objective: string;
   showToast: (msg: string, type: ToastType) => void;
@@ -70,7 +70,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     const doctorLabel =
       doctorOptions.find((d) => d.value === selectedDoctor)?.label ||
       selectedDoctor;
-    onConfirm(selectedDoctor, doctorLabel);
+    onConfirm(selectedDoctor, doctorLabel, editedSubjective, editedObjective);
   };
 
   const fieldStyle: React.CSSProperties = {

@@ -275,17 +275,19 @@ def update_clinical_note(
     encounter_id: UUID,
     data: ClinicalNoteUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_doctor),
+    current_user: User = Depends(allow_staff),
 ):
     """
-    Update clinical note (Doctor edits/approves AI draft).
-    Increments version and can finalize the note.
+    Update clinical note (Nurse or Doctor edits/approves AI draft).
+    Increments version on each save.
+    Only a Doctor can finalize the note; nurses are blocked from setting
+    is_finalized=True at the service layer.
     When finalized, stamps the doctor_id on the encounter and sets
     encounter status to COMPLETED.
 
-    **Required Role**: Doctor only
+    **Required Role**: Nurse or Doctor
     """
-    logger.info(f"Doctor updating clinical note: encounter_id={encounter_id}, doctor={current_user.full_name}")
+    logger.info(f"User updating clinical note: encounter_id={encounter_id}, user={current_user.full_name}")
 
     try:
         note = encounter_service.update_clinical_note(encounter_id, data, current_user, db)
