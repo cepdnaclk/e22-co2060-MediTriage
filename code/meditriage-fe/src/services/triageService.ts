@@ -75,7 +75,7 @@ export const getClinicalNote = async (encounterId: string): Promise<ClinicalNote
     return api.get<ClinicalNoteResponse>(`/triage/${encounterId}/note`);
 };
 
-// Update/finalize clinical note (Doctor only)
+// Update/finalize clinical note (Nurse or Doctor; only Doctor can finalize)
 export const updateClinicalNote = async (
     encounterId: string,
     data: {
