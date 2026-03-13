@@ -210,9 +210,11 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                                 <button onClick={handleEditOpen} className="flex-1 py-3 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-colors">
                                     Edit Patient
                                 </button>
-                                <button onClick={() => setShowDeleteConfirm(true)} className="py-3 px-5 text-sm font-semibold text-red-500 bg-red-50 rounded-full hover:bg-red-100 transition-colors">
-                                    Delete
-                                </button>
+                                {userRole !== 'NURSE' && (
+                                    <button onClick={() => setShowDeleteConfirm(true)} className="py-3 px-5 text-sm font-semibold text-red-500 bg-red-50 rounded-full hover:bg-red-100 transition-colors">
+                                        Delete
+                                    </button>
+                                )}
                             </div>
                         </div>
 
