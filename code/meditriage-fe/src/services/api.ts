@@ -41,6 +41,11 @@ async function request<T>(
         throw new Error(message);
     }
 
+    // 204 No Content has no body
+    if (response.status === 204) {
+        return {} as T;
+    }
+
     return response.json();
 }
 

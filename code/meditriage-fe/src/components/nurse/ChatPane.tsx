@@ -136,9 +136,18 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
     };
 
     // Review confirmed — add patient to queue with doctor assignment
-    const handleReviewConfirm = async (doctorId: string, doctorName: string) => {
-        // Persist doctor assignment and status to backend
+    const handleReviewConfirm = async (doctorId: string, doctorName: string, editedSubjective: string, editedObjective: string) => {
+        // Persist nurse's SOAP edits and doctor assignment to backend
         if (encounterId) {
+            try {
+                // Save nurse-edited Subjective & Objective to the clinical note
+                await triageService.updateClinicalNote(encounterId, {
+                    subjective: editedSubjective,
+                    objective: editedObjective,
+                });
+            } catch {
+                // Continue even if note update fails — local state update is the priority
+            }
             try {
                 await triageService.updateEncounter(encounterId, {
                     doctor_id: doctorId,
@@ -172,9 +181,14 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
         setShowCancelConfirm(true);
     };
 
-    const handleConfirmCancel = () => {
-        // Remove case from local state so it never shows anywhere
+    const handleConfirmCancel = async () => {
+        // Delete the abandoned encounter from the backend
         if (encounterId) {
+            try {
+                await triageService.deleteEncounter(encounterId);
+            } catch {
+                // Continue even if delete fails — still navigate away
+            }
             onRemoveCase(encounterId);
         }
         setShowCancelConfirm(false);
@@ -284,7 +298,19 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             {/* Review SOAP */}
             <ReviewModal
                 isOpen={showReview}
-                onClose={() => { setShowReview(false); navigate('/overview'); }}
+                onClose={async () => {
+                    // Delete the abandoned encounter from the backend
+                    if (encounterId) {
+                        try {
+                            await triageService.deleteEncounter(encounterId);
+                        } catch {
+                            // Continue even if delete fails
+                        }
+                        onRemoveCase(encounterId);
+                    }
+                    setShowReview(false);
+                    navigate('/overview');
+                }}
                 onConfirm={handleReviewConfirm}
                 subjective={soapData.subjective}
                 objective={soapData.objective}

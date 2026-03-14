@@ -71,8 +71,8 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
         if (!selectedPatient) return;
         setIsSaving(true);
         try {
-            await triageService.updateEncounter(selectedPatient.id, {
-                status: 'COMPLETED',
+            await triageService.updateClinicalNote(selectedPatient.id, {
+                is_finalized: true,
                 ...noteData
             });
             showToast('Diagnosis saved and patient treated', 'success');

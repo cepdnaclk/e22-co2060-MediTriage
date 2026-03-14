@@ -207,6 +207,45 @@ def update_encounter(
         )
 
 
+@router.delete("/{encounter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cancel_encounter(
+    encounter_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_nurse),
+):
+    """
+    Cancel (permanently delete) an abandoned triage encounter.
+
+    Removes the MedicalEncounter and all associated TriageInteraction and
+    ClinicalNote records. Only encounters still in TRIAGE_IN_PROGRESS status
+    can be cancelled — encounters that have already been submitted for doctor
+    review or completed are protected clinical records.
+
+    Called by the frontend when a nurse clicks the Cancel / Discard button
+    in the Triage Chat or Clinical Summary pane.
+
+    **Required Role**: Nurse
+    **Returns**: 204 No Content on success
+    """
+    logger.info(
+        f"Cancel encounter requested: encounter_id={encounter_id}, "
+        f"nurse={current_user.full_name}"
+    )
+    try:
+        encounter_service.delete_encounter(encounter_id, db)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Failed to cancel encounter: encounter_id={encounter_id}, error={str(e)}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to cancel encounter"
+        )
+
+
 @router.get("/{encounter_id}/note", response_model=ClinicalNoteResponse)
 def get_clinical_note(
     encounter_id: UUID,
@@ -236,17 +275,19 @@ def update_clinical_note(
     encounter_id: UUID,
     data: ClinicalNoteUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_doctor),
+    current_user: User = Depends(allow_staff),
 ):
     """
-    Update clinical note (Doctor edits/approves AI draft).
-    Increments version and can finalize the note.
+    Update clinical note (Nurse or Doctor edits/approves AI draft).
+    Increments version on each save.
+    Only a Doctor can finalize the note; nurses are blocked from setting
+    is_finalized=True at the service layer.
     When finalized, stamps the doctor_id on the encounter and sets
     encounter status to COMPLETED.
 
-    **Required Role**: Doctor only
+    **Required Role**: Nurse or Doctor
     """
-    logger.info(f"Doctor updating clinical note: encounter_id={encounter_id}, doctor={current_user.full_name}")
+    logger.info(f"User updating clinical note: encounter_id={encounter_id}, user={current_user.full_name}")
 
     try:
         note = encounter_service.update_clinical_note(encounter_id, data, current_user, db)

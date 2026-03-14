@@ -204,6 +204,56 @@ def update_encounter(
     return encounter
 
 
+def delete_encounter(encounter_id: UUID, db: Session) -> None:
+    """
+    Permanently delete an abandoned triage encounter and all its children.
+
+    Only encounters in TRIAGE_IN_PROGRESS status may be deleted.
+    Encounters that are AWAITING_REVIEW or COMPLETED are active clinical
+    records and must not be removed through this path.
+
+    SQLAlchemy cascade="all, delete-orphan" on the relationships ensures
+    that all associated TriageInteraction and ClinicalNote rows are
+    automatically deleted when the parent MedicalEncounter is removed.
+
+    Args:
+        encounter_id: UUID of the encounter to delete
+        db: Database session
+
+    Raises:
+        HTTPException 404: Encounter not found
+        HTTPException 409: Encounter is not in TRIAGE_IN_PROGRESS status
+    """
+    encounter = db.query(MedicalEncounter).filter(
+        MedicalEncounter.id == encounter_id
+    ).first()
+
+    if not encounter:
+        logger.warning(f"Encounter not found for deletion: id={encounter_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Encounter with ID {encounter_id} not found"
+        )
+
+    if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
+        logger.warning(
+            f"Attempted to delete non-cancellable encounter: "
+            f"id={encounter_id}, status={encounter.status.value}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Cannot cancel encounter in '{encounter.status.value}' status. "
+                "Only TRIAGE_IN_PROGRESS encounters can be deleted."
+            )
+        )
+
+    db.delete(encounter)
+    db.commit()
+
+    logger.info(f"Encounter deleted (cancelled): id={encounter_id}")
+
+
 def get_clinical_note(encounter_id: UUID, db: Session) -> Optional[ClinicalNote]:
     """
     Fetch SOAP note for an encounter.
@@ -234,46 +284,57 @@ def update_clinical_note(
     db: Session
 ) -> ClinicalNote:
     """
-    Doctor edits/approves AI-generated SOAP note draft.
-    Increments version and can finalize the note.
-    
+    Nurse or Doctor edits the AI-generated SOAP note draft.
+    Increments version on each save.
+    Only Doctors may finalize the note (is_finalized=True).
+
     Args:
         encounter_id: Encounter UUID
         data: Note update data
-        current_user: Doctor making the update
+        current_user: User making the update (Nurse or Doctor)
         db: Database session
-        
+
     Returns:
         Updated ClinicalNote
-        
+
     Raises:
         HTTPException: 404 if note not found
-        HTTPException: 403 if note already finalized
+        HTTPException: 403 if note already finalized, or if a nurse tries to finalize
     """
     note = get_clinical_note(encounter_id, db)
-    
+
     if not note:
         logger.warning(f"Clinical note not found for update: encounter_id={encounter_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Clinical note for encounter {encounter_id} not found"
         )
-    
-    # Prevent editing if already finalized (optional business rule)
-    if note.is_finalized and not data.is_finalized:  # Only block if trying to edit finalized note
+
+    # Prevent editing an already-finalized note
+    if note.is_finalized and not data.is_finalized:
         logger.warning(f"Attempted to edit finalized note: encounter_id={encounter_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot edit a finalized clinical note"
         )
-    
+
+    # Only doctors can finalize a note
+    if data.is_finalized and current_user.role.value != "doctor":
+        logger.warning(
+            f"Non-doctor attempted to finalize note: encounter_id={encounter_id}, "
+            f"user={current_user.full_name}, role={current_user.role}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only doctors can finalize a clinical note"
+        )
+
     # Update only provided fields
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if field == "is_finalized" and value:
-            # Mark as finalized
+            # Mark as finalized and stamp the doctor on the encounter
             note.is_finalized = True
-            # Update encounter status to COMPLETED and stamp the doctor
             encounter = db.query(MedicalEncounter).filter(
                 MedicalEncounter.id == encounter_id
             ).first()
@@ -282,16 +343,16 @@ def update_clinical_note(
                 encounter.doctor_id = current_user.id  # audit trail: who finalized
         else:
             setattr(note, field, value)
-    
-    # Increment version on update
+
+    # Increment version on every save
     note.version += 1
-    
+
     db.commit()
     db.refresh(note)
-    
+
     logger.info(
         f"Clinical note updated: encounter_id={encounter_id}, version={note.version}, "
-        f"finalized={note.is_finalized}, doctor={current_user.full_name}"
+        f"finalized={note.is_finalized}, updated_by={current_user.full_name}"
     )
-    
+
     return note
