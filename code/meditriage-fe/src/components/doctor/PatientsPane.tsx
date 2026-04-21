@@ -131,7 +131,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
                     <input
                         type="text" placeholder="Search assigned patients..."
                         value={search} onChange={e => { setSearch(e.target.value); setVisibleCount(10); }}
-                        className="w-full bg-transparent !border-0 !outline-none !shadow-none text-sm font-medium text-gray-900 placeholder-gray-400"
+                        className="search-input w-full bg-transparent !border-0 !outline-none !shadow-none text-sm font-medium text-gray-900 placeholder-gray-400"
                     />
                     {search && (
                         <button onClick={() => { setSearch(''); setVisibleCount(10); }} className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
