@@ -129,6 +129,19 @@ const App: React.FC = () => {
     };
 
     const handleNicProceed = (patientData: any) => {
+        // Guard: Check if patient already has an active encounter (Frontend-only check)
+        if (patientData.id) {
+            const hasActiveEncounter = cases.some(c => 
+                (c.patientId === patientData.id || c.patientId === undefined) && 
+                c.status !== TriageStatus.COMPLETED
+            );
+
+            if (hasActiveEncounter) {
+                showToast('This patient already has an active session. Please cancel the existing session before starting a new one.', 'error');
+                return;
+            }
+        }
+        
         setPrefillPatient(patientData);
         setShowNicModal(false);
         setShowAdmitModal(true);
