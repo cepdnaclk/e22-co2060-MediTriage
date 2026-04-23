@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, UserRole } from '../types';
+import { User } from '../types';
 import * as authService from '../services/authService';
 
 interface LoginProps {
@@ -7,7 +7,6 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-   const [role, setRole] = useState<UserRole>(UserRole.NURSE);
    const [username, setUsername] = useState('');
    const [password, setPassword] = useState('');
    const [error, setError] = useState('');
@@ -40,26 +39,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                />
             </div>
 
-            {/* Role Toggle */}
-            <div className="bg-[#eef1f6] p-1.5 rounded-full flex mb-[25px]">
-               <button
-                  onClick={() => setRole(UserRole.NURSE)}
-                  className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all duration-200 ${role === UserRole.NURSE
-                     ? 'bg-[#17406E] text-white shadow-md hover:bg-[#1c5b7e]'
-                     : 'text-gray-400 hover:text-gray-600'
-                     }`}
-               >
-                  Nurse
-               </button>
-               <button
-                  onClick={() => setRole(UserRole.DOCTOR)}
-                  className={`flex-1 py-3 rounded-full text-sm font-semibold transition-all duration-200 ${role === UserRole.DOCTOR
-                     ? 'bg-[#17406E] text-white shadow-md hover:bg-[#1c5b7e]'
-                     : 'text-gray-400 hover:text-gray-600'
-                     }`}
-               >
-                  Doctor
-               </button>
+            {/* Login Heading */}
+            <div className="text-center mb-[25px]">
+               <h1 className="text-2xl font-bold text-[#17406E]">User Login</h1>
+               <p className="text-gray-500 text-sm mt-2">Access your medical dashboard</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,4 +92,4 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
    );
 };
 
-export default Login;
+export default Login;
