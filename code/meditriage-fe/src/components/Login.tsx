@@ -40,10 +40,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             {/* Login Heading */}
-            <div className="text-center mb-[25px]">
+            {/* <div className="text-center mb-[25px]">
                <h1 className="text-2xl font-bold text-[#17406E]">User Login</h1>
                <p className="text-gray-500 text-sm mt-2">Access your medical dashboard</p>
-            </div>
+            </div> */}
 
             <form onSubmit={handleSubmit} className="space-y-6">
                <div>
@@ -92,4 +92,4 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
    );
 };
 
-export default Login;
+export default Login;
