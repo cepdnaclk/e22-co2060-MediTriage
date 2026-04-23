@@ -96,6 +96,11 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
 
     // Nurse clicks "End & Report"
     const handleEndInterview = () => {
+        const hasUserMessages = messages.some(m => m.role === 'user');
+        if (!hasUserMessages) {
+            showToast('Please collect at least one patient response before ending the interview.', 'error');
+            return;
+        }
         setShowEndConfirm(true);
     };
 
