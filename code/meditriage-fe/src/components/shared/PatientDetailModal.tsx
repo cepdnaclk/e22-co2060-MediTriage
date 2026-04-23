@@ -148,7 +148,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
     return (
         <>
             <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl" zIndex={70}>
-                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col" style={{ height: '70vh' }}>
+                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col" style={{ height: '-webkit-fill-available' }}>
                     {/* Header */}
                     <div className="px-8 pt-7 pb-4 flex items-center justify-between shrink-0" style={{ borderBottom: '1px solid #f0f0f0' }}>
                         <div>
