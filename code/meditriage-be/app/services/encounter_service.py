@@ -7,7 +7,7 @@ from typing import Tuple, List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.clinical import MedicalEncounter, TriageInteraction, ClinicalNote, EncounterStatus, SenderType
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.clinical import (
     EncounterCreate,
     EncounterUpdateRequest,
@@ -318,8 +318,10 @@ def update_clinical_note(
             detail="Cannot edit a finalized clinical note"
         )
 
-    # Only doctors can finalize a note
-    if data.is_finalized and current_user.role.value != "doctor":
+    # Only doctors can finalize a note.
+    # Compare against the UserRole enum directly to avoid case-sensitivity bugs
+    # (role.value is "DOCTOR" uppercase, not "doctor" lowercase).
+    if data.is_finalized and current_user.role != UserRole.DOCTOR:
         logger.warning(
             f"Non-doctor attempted to finalize note: encounter_id={encounter_id}, "
             f"user={current_user.full_name}, role={current_user.role}"
