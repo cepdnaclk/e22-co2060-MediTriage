@@ -173,6 +173,7 @@ const OverviewPane: React.FC<OverviewPaneProps> = ({ activeCases, careSetting, u
                 patient={selectedPatient}
                 showToast={showToast}
                 onRemoveCase={onRemoveCase}
+                userRole={user.role}
             />
         </div>
     );

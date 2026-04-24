@@ -210,7 +210,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                                     <button onClick={handleEditOpen} className="flex-1 py-3 text-sm font-bold text-white bg-[#17406E] rounded-full hover:bg-[#1c5b7e] transition-colors">
                                         Edit Patient
                                     </button>
-                                    {userRole !== 'NURSE' && (
+                                    {userRole === 'ADMIN' && (
                                         <button onClick={() => setShowDeleteConfirm(true)} className="py-3 px-5 text-sm font-semibold text-red-500 bg-red-50 rounded-full hover:bg-red-100 transition-colors">
                                             Delete
                                         </button>
@@ -370,7 +370,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
 
             <ConfirmModal isOpen={showDeleteConfirm} title="Delete Patient?" description="This action cannot be undone. All associated records will be permanently removed." confirmLabel="Delete" isDestructive onConfirm={handleDelete} onCancel={() => setShowDeleteConfirm(false)} />
 
-            <SOAPNoteModal isOpen={showSoapNote} onClose={() => setShowSoapNote(false)} note={soapNote} doctorName={soapDoctorName} onDeleteRecord={() => { setShowSoapNote(false); setShowDeleteRecordConfirm(true); }} />
+            <SOAPNoteModal isOpen={showSoapNote} onClose={() => setShowSoapNote(false)} note={soapNote} doctorName={soapDoctorName} onDeleteRecord={userRole === 'ADMIN' ? () => { setShowSoapNote(false); setShowDeleteRecordConfirm(true); } : undefined} />
 
             <ConfirmModal isOpen={showDeleteRecordConfirm} title="Delete Record?" description="This will permanently delete the clinical record for this encounter." confirmLabel="Delete" isDestructive onConfirm={() => { setShowDeleteRecordConfirm(false); showToast('Record deletion requires backend support', 'info'); }} onCancel={() => setShowDeleteRecordConfirm(false)} />
         </>

@@ -167,6 +167,7 @@ const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onR
                 patient={selectedPatient}
                 showToast={showToast}
                 onRemoveCase={onRemoveCase}
+                userRole={user.role}
             />
         </div>
     );
