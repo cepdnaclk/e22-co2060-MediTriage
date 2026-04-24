@@ -334,7 +334,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth</label>
-                            <input type="date" value={editDob} onChange={e => setEditDob(e.target.value)} className={inputStyle} style={inputBg} />
+                            <input type="date" value={editDob} max={new Date().toISOString().split('T')[0]} onChange={e => setEditDob(e.target.value)} className={inputStyle} style={inputBg} />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2.5">Gender</label>

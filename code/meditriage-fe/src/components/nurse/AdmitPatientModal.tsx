@@ -86,11 +86,19 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
             const interview = await triageService.startInterview(patientId!, chiefComplaint.trim());
 
             // Build case for local state
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                calculatedAge--;
+            }
+
             const newCase: PatientCase = {
                 id: interview.encounter_id,
                 patientId: patientId!,
                 patientName: `${firstName.trim()} ${lastName.trim()}`,
-                age: dob ? String(new Date().getFullYear() - new Date(dob).getFullYear()) : '',
+                age: dob ? String(calculatedAge) : '',
                 gender: gender,
                 chiefComplaint: chiefComplaint.trim(),
                 nurseId: '',
@@ -158,11 +166,11 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
 
                         {/* DOB */}
                         <div>
-
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date of Birth <span style={{ color: 'red' }}>*</span></label>
                             <input
                                 required
                                 type="date" value={dob}
+                                max={new Date().toISOString().split('T')[0]}
                                 onChange={e => setDob(e.target.value)}
                                 className={inputStyle} style={inputBg}
                             />
