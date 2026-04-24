@@ -16,6 +16,13 @@ export const setToken = (token: string | null) => {
 
 export const getToken = (): string | null => accessToken;
 
+// Callback for when a 401 is received (to be set by App.tsx)
+let onUnauthorizedCallback: (() => void) | null = null;
+
+export const setOnUnauthorized = (callback: (() => void) | null) => {
+    onUnauthorizedCallback = callback;
+};
+
 // Generic fetch wrapper with JWT injection
 async function request<T>(
     endpoint: string,
@@ -36,6 +43,14 @@ async function request<T>(
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            // Token expired or invalid — notify UI
+            setToken(null);
+            if (onUnauthorizedCallback) {
+                onUnauthorizedCallback();
+            }
+            throw new Error('Session expired. Please login again.');
+        }
         const errorBody = await response.json().catch(() => ({}));
         const message = errorBody.detail || `API Error: ${response.status}`;
         throw new Error(message);
