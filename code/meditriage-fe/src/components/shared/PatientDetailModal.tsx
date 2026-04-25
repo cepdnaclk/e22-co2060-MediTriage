@@ -372,7 +372,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
 
             <SOAPNoteModal isOpen={showSoapNote} onClose={() => setShowSoapNote(false)} note={soapNote} doctorName={soapDoctorName} onDeleteRecord={userRole === 'ADMIN' ? () => { setShowSoapNote(false); setShowDeleteRecordConfirm(true); } : undefined} />
 
-            <ConfirmModal isOpen={showDeleteRecordConfirm} title="Delete Record?" description="This will permanently delete the clinical record for this encounter." confirmLabel="Delete" isDestructive onConfirm={() => { setShowDeleteRecordConfirm(false); showToast('Record deletion requires backend support', 'info'); }} onCancel={() => setShowDeleteRecordConfirm(false)} />
+            <ConfirmModal isOpen={showDeleteRecordConfirm} title="Delete Record?" description="This will permanently delete the clinical record for this encounter." confirmLabel="Delete" isDestructive onConfirm={() => { setShowDeleteRecordConfirm(false); showToast('Patient record deletion is restricted to administrators only', 'info'); }} onCancel={() => setShowDeleteRecordConfirm(false)} />
         </>
     );
 };
