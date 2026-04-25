@@ -11,9 +11,10 @@ import ChatPane from './components/nurse/ChatPane';
 import NicGatekeeperModal from './components/nurse/NicGatekeeperModal';
 import AdmitPatientModal from './components/nurse/AdmitPatientModal';
 import Toast, { ToastType } from './components/ui/Toast';
+import ConfirmModal from './components/ui/ConfirmModal';
 import * as authService from './services/authService';
 import * as triageService from './services/triageService';
-import { getToken } from './services/api';
+import { getToken, setOnUnauthorized } from './services/api';
 
 // -- Doctor Components --
 import DoctorOverviewPane from './components/doctor/OverviewPane';
@@ -37,6 +38,8 @@ const App: React.FC = () => {
         message: '', type: 'info', isVisible: false,
     });
 
+    const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+
     const showToast = useCallback((message: string, type: ToastType = 'info') => {
         setToast({ message, type, isVisible: true });
     }, []);
@@ -59,6 +62,13 @@ const App: React.FC = () => {
             setIsCheckingAuth(false);
         };
         checkAuth();
+
+        // Register session expiration callback
+        setOnUnauthorized(() => {
+            setShowSessionExpiredModal(true);
+        });
+
+        return () => setOnUnauthorized(null);
     }, []);
 
     // Load existing encounters from backend when user is authenticated
@@ -295,6 +305,15 @@ const App: React.FC = () => {
                 onStartInterview={handleStartChat}
                 prefillData={prefillPatient}
                 showToast={showToast}
+            />
+
+            <ConfirmModal
+                isOpen={showSessionExpiredModal}
+                title="Session Expired"
+                description="Your session has expired. Please login again to continue."
+                confirmLabel="Continue"
+                onConfirm={handleLogout}
+                onCancel={handleLogout} // Force logout regardless of which button they press
             />
         </div>
     );
