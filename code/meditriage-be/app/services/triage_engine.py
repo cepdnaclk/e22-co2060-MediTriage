@@ -197,8 +197,8 @@ async def process_message(
         )
         db.add(clinical_note)
 
-        # Update encounter status — nurse will set urgency manually
-        encounter.status = EncounterStatus.AWAITING_REVIEW
+        # Note: We keep status as TRIAGE_IN_PROGRESS here so the encounter can be cancelled.
+        # The frontend will explicitly update it to AWAITING_REVIEW upon submission.
 
         soap_note_schema = SOAPNoteSchema(
             subjective=soap_note.subjective,
