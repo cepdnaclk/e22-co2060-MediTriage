@@ -59,9 +59,15 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 plan: note.plan
             });
         } catch (error) {
-            console.error('Failed to fetch clinical note:', error);
-            showToast('Failed to load clinical notes', 'error');
-            setShowDiagnosisModal(false);
+            console.error('Failed to fetch clinical note, providing empty form:', error);
+            // Instead of closing the modal, provide an empty note so the doctor can still diagnose
+            setCurrentNote({
+                subjective: '',
+                objective: '',
+                assessment: '',
+                plan: ''
+            });
+            showToast('No clinical notes found. You can enter them manually.', 'info');
         } finally {
             setIsLoadingNote(false);
         }

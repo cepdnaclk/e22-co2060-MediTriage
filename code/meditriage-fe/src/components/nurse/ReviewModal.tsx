@@ -67,6 +67,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       showToast("Please assign a doctor", "error");
       return;
     }
+
+    if (!editedSubjective?.trim() && !editedObjective?.trim()) {
+      showToast("Clinical summary is empty. Please ensure the interview was conducted properly.", "error");
+      return;
+    }
+
     const doctorLabel =
       doctorOptions.find((d) => d.value === selectedDoctor)?.label ||
       selectedDoctor;
