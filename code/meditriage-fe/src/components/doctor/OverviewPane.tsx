@@ -243,6 +243,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 note={isLoadingNote ? null : currentNote}
                 onSave={handleSaveDiagnosis}
                 isSaving={isSaving}
+                showToast={showToast}
             />
         </div>
     );

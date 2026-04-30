@@ -13,13 +13,14 @@ interface DiagnosisModalProps {
     patientName: string;
     onSave: (note: { subjective: string; objective: string; assessment: string; plan: string }) => void;
     isSaving?: boolean;
+    showToast?: (msg: string, type: any) => void;
 }
 
 /**
  * Diagnosis Modal for Doctors.
  * Allows editing all 4 SOAP fields and saving them.
  */
-const DiagnosisModal: React.FC<DiagnosisModalProps> = ({ isOpen, onClose, note, patientName, onSave, isSaving = false }) => {
+const DiagnosisModal: React.FC<DiagnosisModalProps> = ({ isOpen, onClose, note, patientName, onSave, isSaving = false, showToast }) => {
     const [formData, setFormData] = useState({
         subjective: '',
         objective: '',
@@ -43,6 +44,14 @@ const DiagnosisModal: React.FC<DiagnosisModalProps> = ({ isOpen, onClose, note, 
     };
 
     const handleSave = () => {
+        if (!formData.assessment.trim()) {
+            if (showToast) {
+                showToast('Please provide an Assessment (Diagnosis) before marking as treated.', 'error');
+            } else {
+                alert('Please provide an Assessment (Diagnosis) before marking as treated.');
+            }
+            return;
+        }
         onSave(formData);
     };
 

@@ -240,6 +240,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
                 note={isLoadingNote ? null : currentNote}
                 onSave={handleSaveDiagnosis}
                 isSaving={isSaving}
+                showToast={showToast}
             />
         </div>
     );
