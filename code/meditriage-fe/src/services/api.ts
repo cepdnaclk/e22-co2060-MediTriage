@@ -43,7 +43,7 @@ async function request<T>(
     });
 
     if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 && endpoint !== '/auth/login') {
             // Token expired or invalid — notify UI
             setToken(null);
             if (onUnauthorizedCallback) {

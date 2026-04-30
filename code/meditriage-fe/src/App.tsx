@@ -106,6 +106,7 @@ const App: React.FC = () => {
 
     const handleLogin = (user: User) => {
         setCurrentUser(user);
+        setShowSessionExpiredModal(false);
         navigate('/overview');
     };
 

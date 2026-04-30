@@ -14,6 +14,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
+      if (!username.trim() || !password.trim()) {
+         setError('Please enter both username and password');
+         return;
+      }
+
       setIsLoading(true);
       setError('');
 
