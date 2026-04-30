@@ -15,6 +15,7 @@ interface PatientDetailModalProps {
     onRemoveCase: (id: string) => void;
     userRole?: string;
     onStartDiagnosing?: (patient: PatientCase) => void;
+    onUpdateCase?: (updatedCase: PatientCase) => void;
 }
 
 const HISTORY_PAGE_SIZE = 3;
@@ -28,7 +29,7 @@ const getStatusLabel = (status: TriageStatus) => {
     }
 };
 
-const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose, patient, showToast, onRemoveCase, userRole, onStartDiagnosing }) => {
+const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose, patient, showToast, onRemoveCase, userRole, onStartDiagnosing, onUpdateCase }) => {
     const [history, setHistory] = useState<patientService.EncounterSummary[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -64,7 +65,16 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
 
             // Fetch full patient details by ID
             patientService.getPatient(patient.patientId)
-                .then(p => setPatientDetails(p))
+                .then(p => {
+                    setPatientDetails(p);
+                    // If age is missing in the case but we have DOB now, sync it back
+                    if (p.date_of_birth && patient && !patient.age && onUpdateCase) {
+                        const calculatedAge = calculateAge(p.date_of_birth);
+                        if (calculatedAge !== null) {
+                            onUpdateCase({ ...patient, age: String(calculatedAge) });
+                        }
+                    }
+                })
                 .catch(() => setPatientDetails(null));
         } else {
             setHistory([]);
@@ -145,6 +155,18 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
         catch { return dateStr; }
     };
 
+    const calculateAge = (dob: string) => {
+        if (!dob) return null;
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     return (
         <>
             <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl" zIndex={70}>
@@ -161,7 +183,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                     </div>
 
                     {/* Two-column content — fills remaining height */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-8 py-5 flex-1 min-h-0 overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-8 pb-8 pt-4 flex-1 min-h-0 overflow-hidden">
                         {/* Left Column — full height, scrollable */}
                         <div className="flex flex-col gap-4 overflow-y-auto pr-1">
                             {/* Profile Card — avatar + age only */}
@@ -172,7 +194,11 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                                     </div>
                                     <div>
                                         <p className="font-bold text-gray-900">{patientDetails ? `${patientDetails.first_name} ${patientDetails.last_name}` : patient.patientName}</p>
-                                        <p className="text-xs text-gray-500">{patient.age ? `${patient.age} years old` : 'N/A'}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {patientDetails?.date_of_birth
+                                                ? `${calculateAge(patientDetails.date_of_birth)} years old`
+                                                : (patient.age ? `${patient.age} years old` : 'N/A')}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

@@ -24,10 +24,10 @@ const TopHeader: React.FC<TopHeaderProps> = ({ careSetting, onCareSettingChange,
         <header
             className="fixed top-0 right-0 z-40 flex items-center justify-end gap-4 animate-slide-down"
             style={{
-                left: '330px',
-                height: '80px',
+                left: '0',
+                height: '90px',
                 paddingTop: '15px',
-                padding: '25px 40px 0',
+                padding: '25px 40px 10px',
                 background: 'rgba(242, 242, 247, 0.85)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',

@@ -55,13 +55,24 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
     };
 
     const handleSubmit = async () => {
-        if (!firstName.trim() || !lastName.trim() || !dob || !chiefComplaint.trim()) {
-            showToast('Please fill all required fields', 'error');
+        if (!firstName.trim()) {
+            showToast('Please enter the patient\'s first name', 'error');
             return;
         }
-
+        if (!lastName.trim()) {
+            showToast('Please enter the patient\'s last name', 'error');
+            return;
+        }
+        if (!dob) {
+            showToast('Please enter a valid Date of Birth', 'error');
+            return;
+        }
         if (!gender) {
             showToast('Please select a gender', 'error');
+            return;
+        }
+        if (!chiefComplaint.trim()) {
+            showToast('Please enter the Chief Complaint', 'error');
             return;
         }
 
