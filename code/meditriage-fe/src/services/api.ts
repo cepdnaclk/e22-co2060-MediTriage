@@ -43,7 +43,8 @@ async function request<T>(
     });
 
     if (!response.ok) {
-        if (response.status === 401) {
+        const isLoginRequest = endpoint.includes('/auth/login');
+        if (response.status === 401 && !isLoginRequest) {
             // Token expired or invalid — notify UI
             setToken(null);
             if (onUnauthorizedCallback) {
