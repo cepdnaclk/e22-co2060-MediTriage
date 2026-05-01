@@ -41,6 +41,7 @@ class EncounterListItem(BaseModel):
     patient_name: Optional[str] = None   # denormalized from Patient.full_name
     nurse_id: UUID
     doctor_id: Optional[UUID] = None     # assigned doctor (populated after nurse assigns)
+    doctor_name: Optional[str] = None    # assigned doctor full name
     status: EncounterStatus
     is_urgent: bool
     chief_complaint: Optional[str] = None

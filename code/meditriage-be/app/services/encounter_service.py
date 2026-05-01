@@ -4,7 +4,7 @@ Business logic for medical encounters, clinical notes, and triage workflow manag
 """
 from uuid import UUID
 from typing import Tuple, List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 from app.models.clinical import MedicalEncounter, TriageInteraction, ClinicalNote, EncounterStatus, SenderType
 from app.models.user import User, UserRole
@@ -39,6 +39,7 @@ def get_active_encounters(db: Session) -> List[MedicalEncounter]:
     ]
     encounters = (
         db.query(MedicalEncounter)
+        .options(joinedload(MedicalEncounter.doctor))
         .filter(MedicalEncounter.status.in_(active_statuses))
         .order_by(
             MedicalEncounter.is_urgent.desc(),          # urgent first

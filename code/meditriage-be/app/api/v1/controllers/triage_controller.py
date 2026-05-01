@@ -109,6 +109,10 @@ def list_active_encounters(
                 patient_name=f"{e.patient.first_name} {e.patient.last_name}" if e.patient else None,
                 nurse_id=e.nurse_id,
                 doctor_id=e.doctor_id,
+                doctor_name=(
+                    e.doctor.full_name[4:].strip() if e.doctor and e.doctor.full_name.startswith("Dr. ")
+                    else e.doctor.full_name if e.doctor else None
+                ),
                 status=e.status,
                 is_urgent=e.is_urgent,
                 chief_complaint=e.chief_complaint,
