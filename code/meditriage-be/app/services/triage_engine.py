@@ -6,6 +6,7 @@ Sits between API endpoints and the AI pipeline.
 from uuid import UUID
 from datetime import date, datetime
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from app.models.clinical import (
     MedicalEncounter,
     TriageInteraction,
@@ -32,10 +33,23 @@ _pipeline: TriagePipeline | None = None
 
 
 def _get_pipeline() -> TriagePipeline:
-    """Lazy initialization of the triage pipeline singleton."""
+    """
+    Lazy initialization of the triage pipeline singleton.
+    Resets on failure so the next request gets a fresh attempt
+    instead of reusing a broken instance indefinitely.
+    """
     global _pipeline
     if _pipeline is None:
-        _pipeline = TriagePipeline()
+        try:
+            _pipeline = TriagePipeline()
+            logger.info("LLM pipeline initialized successfully.")
+        except Exception as e:
+            _pipeline = None  # reset so next request retries fresh
+            logger.error(f"Failed to initialize LLM pipeline: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="AI service is currently unavailable. Please try again shortly."
+            )
     return _pipeline
 
 
