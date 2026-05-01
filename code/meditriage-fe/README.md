@@ -1,543 +1,294 @@
-# 🏥 MediTriage Frontend
+# MediTriage | Frontend
 
-**AI-Powered Clinical Decision Support System - React Frontend**
+**AI-Powered Emergency Triage & Clinical Decision Support System**
 
-A modern, responsive React application built with Vite, providing an intuitive interface for medical triage workflows and patient management.
+A role-based clinical dashboard built with **React 19**, **TypeScript**, and **Vite**, designed for hospital OPD and emergency departments. The application provides distinct workflows for **Nurses** (patient intake, AI-assisted triage interviews) and **Doctors** (clinical review, SOAP note finalization, diagnosis).
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [Building for Production](#building-for-production)
+- [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
-- [Development](#development)
+- [Architecture Overview](#architecture-overview)
+- [Available Scripts](#available-scripts)
+- [Environment Configuration](#environment-configuration)
+- [API Integration](#api-integration)
 - [Troubleshooting](#troubleshooting)
 
 ---
 
-## ✨ Features
+## Technology Stack
 
-- **🚀 Fast Development**: Vite with Hot Module Replacement (HMR)
-- **⚛️ Modern React**: React 19.2 with hooks and functional components
-- **🎨 Responsive Design**: Mobile-first, adaptive UI
-- **🔐 Authentication**: JWT-based login system
-- **👥 Role-Based UI**: Different views for Nurses, Doctors, and Admins
-- **💬 Real-time Triage**: Conversational AI interface for patient assessment
-- **📊 Patient Management**: Search, create, and manage patient records
-- **📝 Clinical Notes**: View and edit SOAP notes
-- **🎯 ESLint**: Code quality and consistency
-
----
-
-## 🛠 Technology Stack
-
-| Category | Technology | Version |
-|----------|------------|---------|
-| **Framework** | React | 19.2.0 |
-| **Build Tool** | Vite | 7.2.4 |
-| **Language** | JavaScript (ES6+) | Latest |
-| **Linting** | ESLint | 9.39.1 |
-| **Package Manager** | npm | 8.0+ |
+| Category            | Technology              | Version   |
+| ------------------- | ----------------------- | --------- |
+| **UI Framework**    | React                   | 19.2.0    |
+| **Language**        | TypeScript              | 5.8.x     |
+| **Build Tool**      | Vite                    | 5.4.x     |
+| **Routing**         | React Router DOM        | 7.13.x    |
+| **PDF Generation**  | jsPDF                   | 2.5.1     |
+| **Linting**         | ESLint                  | 9.39.x    |
+| **Styling**         | Tailwind CSS (utility)  | CDN       |
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
-Ensure you have the following installed:
+| Requirement                  | Minimum Version |
+| ---------------------------- | --------------- |
+| **Node.js**                  | 18.0+           |
+| **npm**                      | 8.0+            |
+| **MediTriage Backend (API)** | Running on `localhost:8000` |
 
-### Required Software
-
-1. **Node.js 18+**
-   ```bash
-   node --version  # Should be 18.0.0 or higher
-   ```
-   Download: [https://nodejs.org/](https://nodejs.org/)
-
-2. **npm 8+** (comes with Node.js)
-   ```bash
-   npm --version  # Should be 8.0.0 or higher
-   ```
-
-3. **Backend API Running**
-   - The MediTriage backend must be running on `http://localhost:8000`
-   - See backend README for setup instructions
+> The backend API must be running before launching the frontend. Refer to `meditriage-be/README.md` for backend setup.
 
 ---
 
-## 🚀 Installation
-
-### Step 1: Navigate to Frontend Directory
+## Getting Started
 
 ```bash
-cd meditriage-fe
-```
+# 1. Navigate to the frontend directory
+cd code/meditriage-fe
 
-### Step 2: Install Dependencies
-
-```bash
+# 2. Install dependencies
 npm install
-```
 
-This will install all required packages including:
-- React 19.2
-- React DOM
-- Vite build tool
-- ESLint and plugins
-
-**Expected output:**
-```
-added 200+ packages in 30s
-```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables (Optional)
-
-Create a `.env` file in the root directory if you need to customize the API URL:
-
-```bash
-# .env
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-**Default Configuration:**
-- API Base URL: `http://localhost:8000`
-- Frontend Port: `5173` (Vite default)
-
-> **Note**: Vite requires environment variables to be prefixed with `VITE_` to be exposed to the client.
-
-### Proxy Configuration (For Development)
-
-If you're experiencing CORS issues, you can configure a proxy in `vite.config.js`:
-
-```javascript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      }
-    }
-  }
-})
-```
-
----
-
-## ▶️ Running the Application
-
-### Development Mode (Recommended)
-
-Start the development server with hot-reload:
-
-```bash
+# 3. Start the development server
 npm run dev
 ```
 
-**Expected output:**
-```
-  VITE v7.2.4  ready in 500 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-  ➜  press h + enter to show help
-```
-
-**Access the application:**
-- Open browser: [http://localhost:5173](http://localhost:5173)
-
-### Preview Production Build
-
-Build and preview the production version locally:
-
-```bash
-npm run build
-npm run preview
-```
-
-### Custom Port
-
-Run on a different port:
-
-```bash
-npm run dev -- --port 3000
-```
+The app will be available at **http://localhost:3000**.
 
 ---
 
-## 🏗️ Building for Production
-
-### Create Production Build
-
-```bash
-npm run build
-```
-
-This creates an optimized production build in the `dist/` folder.
-
-**Output:**
-```
-vite v7.2.4 building for production...
-✓ 150 modules transformed.
-dist/index.html                   0.46 kB │ gzip:  0.30 kB
-dist/assets/index-abc123.css      1.25 kB │ gzip:  0.65 kB
-dist/assets/index-def456.js     150.50 kB │ gzip: 48.20 kB
-✓ built in 3.5s
-```
-
-### Serve Production Build Locally
-
-```bash
-npm run preview
-```
-
-### Deploy to Production
-
-The `dist/` folder contains all the static files ready for deployment:
-
-**Option 1: Static Hosting (Netlify, Vercel, GitHub Pages)**
-```bash
-# Example for Netlify
-netlify deploy --prod --dir=dist
-```
-
-**Option 2: Traditional Web Server (Nginx, Apache)**
-```bash
-# Copy dist folder to web server root
-cp -r dist/* /var/www/html/
-```
-
-**Option 3: Docker**
-```dockerfile
-FROM nginx:alpine
-COPY dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 meditriage-fe/
-├── public/                      # Static assets
-│   └── vite.svg                # Vite logo
+├── public/                          # Static assets (branding, images)
+│   └── assets/
+│       ├── branding/                # Logo and wordmark
+│       └── images/                  # Avatar and role images
 ├── src/
-│   ├── assets/                 # Images, fonts, etc.
-│   ├── components/             # Reusable React components
-│   ├── pages/                  # Page components
-│   ├── services/               # API service layer
-│   ├── utils/                  # Utility functions
-│   ├── App.jsx                 # Main App component
-│   ├── App.css                 # App styles
-│   ├── main.jsx                # Entry point
-│   └── index.css               # Global styles
-├── index.html                  # HTML template
-├── package.json                # Dependencies & scripts
-├── vite.config.js              # Vite configuration
-├── eslint.config.js            # ESLint configuration
-└── README.md                   # This file
+│   ├── components/
+│   │   ├── doctor/                  # Doctor-specific views
+│   │   │   ├── DiagnosisModal.tsx   # Clinical diagnosis and SOAP editing
+│   │   │   ├── OverviewPane.tsx     # Doctor dashboard overview
+│   │   │   ├── PatientsPane.tsx     # Assigned patient list
+│   │   │   └── SettingsPane.tsx     # Doctor profile settings
+│   │   ├── nurse/                   # Nurse-specific views
+│   │   │   ├── AdmitPatientModal.tsx# Patient intake form
+│   │   │   ├── AnalyzingModal.tsx   # AI processing indicator
+│   │   │   ├── ChatPane.tsx         # AI triage interview chat
+│   │   │   ├── NicGatekeeperModal.tsx # NIC-based patient lookup
+│   │   │   ├── OverviewPane.tsx     # Nurse dashboard overview
+│   │   │   ├── PatientsPane.tsx     # Patient queue management
+│   │   │   ├── ReviewModal.tsx      # Triage review and SOAP preview
+│   │   │   └── SettingsPane.tsx     # Nurse profile settings
+│   │   ├── shared/                  # Cross-role components
+│   │   │   ├── PatientDetailModal.tsx # Full patient record view
+│   │   │   └── SOAPNoteModal.tsx    # Clinical note viewer
+│   │   ├── ui/                      # Reusable UI primitives
+│   │   │   ├── AnimatedModal.tsx    # Modal with enter/exit animations
+│   │   │   ├── Button.tsx           # Standardized button component
+│   │   │   ├── ConfirmModal.tsx     # Destructive action confirmation
+│   │   │   ├── CustomSelect.tsx     # Styled dropdown selector
+│   │   │   └── Toast.tsx            # Notification toast system
+│   │   ├── Login.tsx                # Authentication screen
+│   │   ├── Sidebar.tsx              # Navigation sidebar
+│   │   └── TopHeader.tsx            # Top bar with search and actions
+│   ├── services/                    # API communication layer
+│   │   ├── api.ts                   # HTTP client, JWT interceptor, 401 handling
+│   │   ├── authService.ts           # Login, logout, user profile
+│   │   ├── patientService.ts        # Patient CRUD and encounter creation
+│   │   └── triageService.ts         # Triage sessions, chat, clinical notes
+│   ├── utils/
+│   │   └── helpers.ts               # Shared utility functions
+│   ├── App.tsx                      # Root component, routing, global state
+│   ├── types.ts                     # TypeScript interfaces and enums
+│   └── main.tsx                     # Application entry point
+├── index.html                       # HTML shell with Tailwind CDN
+├── package.json                     # Dependencies and scripts
+├── tsconfig.json                    # TypeScript compiler options
+├── vite.config.ts                   # Vite build and dev-server config
+└── eslint.config.js                 # ESLint rules
 ```
 
 ---
 
-## 🛠️ Development
+## Architecture Overview
 
-### Available Scripts
+### Authentication & Session Management
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with HMR |
-| `npm run build` | Create production build |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint to check code quality |
+- JWT tokens are stored in memory via `api.ts` and attached to every outgoing request.
+- A global `401` interceptor detects expired sessions and triggers a re-login modal — with a carve-out for the `/auth/login` endpoint to prevent false triggers on incorrect passwords.
+- Token expiration is governed by the backend (`ACCESS_TOKEN_EXPIRE_MINUTES`).
 
-### Code Linting
+### Role-Based Routing
 
-Run ESLint to check for code issues:
+| Role       | Base Routes                              | Key Capabilities                                      |
+| ---------- | ---------------------------------------- | ----------------------------------------------------- |
+| **Nurse**  | `/overview`, `/patients`, `/settings`, `/chat` | Patient admission, AI triage interview, queue management |
+| **Doctor** | `/overview`, `/patients`, `/settings`    | Patient review, SOAP note editing, diagnosis finalization |
 
-```bash
-npm run lint
+### State Management
+
+- Global patient case state (`PatientCase[]`) is managed in `App.tsx` and passed to child components via props and callbacks.
+- A **10-second polling interval** keeps the patient list synchronized with the backend.
+- Background enrichment automatically calculates and caches patient ages from dates of birth.
+
+### Component Hierarchy
+
 ```
-
-Fix auto-fixable issues:
-
-```bash
-npm run lint -- --fix
-```
-
-### Hot Module Replacement (HMR)
-
-Vite provides instant HMR - changes to your code are reflected immediately without full page reload:
-
-1. Edit any `.jsx` or `.css` file
-2. Save the file
-3. Browser updates instantly without losing state
-
-### Adding Dependencies
-
-**Production dependency:**
-```bash
-npm install axios
-```
-
-**Development dependency:**
-```bash
-npm install -D prettier
-```
-
-### Common Dependencies You Might Add
-
-```bash
-# HTTP Client
-npm install axios
-
-# Routing
-npm install react-router-dom
-
-# State Management
-npm install zustand  # or redux, jotai, etc.
-
-# UI Components
-npm install @mui/material @emotion/react @emotion/styled
-
-# Forms
-npm install react-hook-form
-
-# Date handling
-npm install date-fns
+App.tsx
+├── Login.tsx                    (unauthenticated)
+├── Sidebar.tsx + TopHeader.tsx  (authenticated shell)
+├── Nurse Views
+│   ├── OverviewPane  →  PatientDetailModal
+│   ├── PatientsPane  →  PatientDetailModal
+│   ├── ChatPane      →  ReviewModal → AnalyzingModal
+│   └── SettingsPane
+└── Doctor Views
+    ├── OverviewPane   →  PatientDetailModal / DiagnosisModal
+    ├── PatientsPane   →  PatientDetailModal / DiagnosisModal
+    └── SettingsPane
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## Available Scripts
 
-### Issue: Port 5173 Already in Use
+| Command             | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `npm run dev`       | Start Vite dev server on port `3000` with HMR  |
+| `npm run build`     | Create optimized production build in `dist/`    |
+| `npm run preview`   | Serve the production build locally              |
+| `npm run lint`      | Run ESLint across the codebase                  |
 
-**Error**: `Port 5173 is in use, trying another one...`
+---
 
-**Solution 1**: Stop the process using port 5173
-```bash
-# Windows
-netstat -ano | findstr :5173
+## Environment Configuration
+
+### Vite Dev Server
+
+The development server is preconfigured in `vite.config.ts`:
+
+```typescript
+export default defineConfig({
+    server: {
+        port: 3000,
+        host: '0.0.0.0',
+    },
+    // ...
+});
+```
+
+### API Base URL
+
+The API base URL is set in `src/services/api.ts`. By default it points to:
+
+```
+http://localhost:8000/api/v1
+```
+
+Update this value if the backend runs on a different host or port.
+
+### Path Aliases
+
+The `@/` alias resolves to `./src/`, configured in both `tsconfig.json` and `vite.config.ts`:
+
+```typescript
+import { SomeComponent } from '@/components/ui/Button';
+```
+
+---
+
+## API Integration
+
+The frontend communicates with the MediTriage backend through four service modules:
+
+### `authService.ts` — Authentication
+
+| Method              | Endpoint           | Purpose                        |
+| ------------------- | ------------------ | ------------------------------ |
+| `login()`           | `POST /auth/login` | Authenticate and receive JWT   |
+| `getCurrentUser()`  | `GET /auth/me`     | Fetch authenticated user profile |
+| `updateUserProfile()` | `PATCH /users/:id` | Update display name          |
+
+### `patientService.ts` — Patient Management
+
+| Method              | Endpoint                       | Purpose                          |
+| ------------------- | ------------------------------ | -------------------------------- |
+| `searchByNIC()`     | `GET /patients/search?nic=`    | Lookup patient by National ID    |
+| `createPatient()`   | `POST /patients`               | Register a new patient           |
+| `getPatient()`      | `GET /patients/:id`            | Fetch full patient record        |
+| `createEncounter()` | `POST /patients/:id/encounters`| Open a new medical encounter     |
+| `getPatientHistory()` | `GET /patients/:id/encounters` | Fetch visit history            |
+
+### `triageService.ts` — AI Triage & Clinical Notes
+
+| Method              | Endpoint                            | Purpose                              |
+| ------------------- | ----------------------------------- | ------------------------------------ |
+| `listEncounters()`  | `GET /triage/encounters`            | List all active encounters           |
+| `startInterview()`  | `POST /triage/:id/start`            | Begin AI-assisted triage session     |
+| `sendMessage()`     | `POST /triage/:id/chat`             | Send a message in triage interview   |
+| `getClinicalNote()` | `GET /triage/:id/note`              | Retrieve SOAP note for an encounter  |
+| `updateClinicalNote()` | `PUT /triage/:id/note`           | Doctor edits and finalizes SOAP note |
+| `listDoctors()`     | `GET /users/doctors`                | Fetch active doctors for assignment  |
+| `assignDoctor()`    | `PATCH /triage/encounters/:id`      | Assign a doctor to an encounter      |
+
+---
+
+## Troubleshooting
+
+### Port 3000 Already in Use
+
+```powershell
+# Find the process
+netstat -ano | findstr :3000
+
+# Kill by PID
 taskkill /PID <PID> /F
-
-# macOS/Linux
-lsof -ti:5173 | xargs kill -9
 ```
 
-**Solution 2**: Use a different port
+Or start on a different port:
 ```bash
-npm run dev -- --port 3000
+npm run dev -- --port 3001
 ```
 
----
+### Cannot Connect to Backend API
 
-### Issue: Cannot Connect to Backend API
-
-**Error**: `Network Error` or `CORS Policy` errors in browser console
-
-**Checklist:**
-1. **Verify backend is running:**
+1. Confirm the backend is running:
    ```bash
    curl http://localhost:8000/
-   # Should return: {"project": "MediTriage API", "status": "running"}
+   # Expected: {"project": "MediTriage API", "status": "running"}
    ```
+2. Verify CORS is configured in the backend (`app/main.py`).
+3. Check the API base URL in `src/services/api.ts`.
 
-2. **Check CORS settings** in backend `app/main.py`:
-   ```python
-   app.add_middleware(
-       CORSMiddleware,
-       allow_origins=["http://localhost:5173"],  # Frontend URL
-       allow_credentials=True,
-       allow_methods=["*"],
-       allow_headers=["*"],
-   )
-   ```
+### Dependency Installation Fails
 
-3. **Update API base URL** in your frontend code if needed
-
----
-
-### Issue: npm install Fails
-
-**Error**: `ERESOLVE unable to resolve dependency tree`
-
-**Solution 1**: Clear npm cache
 ```bash
+# Clear cache and reinstall
 npm cache clean --force
-rm -rf node_modules package-lock.json
+Remove-Item -Recurse -Force node_modules, package-lock.json
 npm install
 ```
 
-**Solution 2**: Use legacy peer dependencies
-```bash
-npm install --legacy-peer-deps
-```
+### Blank Screen After Login
+
+1. Open browser DevTools (F12) → Console tab for errors.
+2. Check the Network tab for failed API requests (red entries).
+3. Hard refresh with `Ctrl + Shift + R`.
 
 ---
 
-### Issue: ESLint Errors
+## License
 
-**Error**: Multiple ESLint warnings/errors
-
-**Solution**: Fix automatically fixable issues
-```bash
-npm run lint -- --fix
-```
-
-For configuration errors, check `eslint.config.js` matches your project setup.
+This project is developed as part of the **CO2060 - Software Systems Design Project** at the **University of Peradeniya**, Faculty of Engineering.
 
 ---
 
-### Issue: Blank White Screen
-
-**Causes & Solutions:**
-
-1. **Check browser console** (F12) for errors
-2. **Verify backend API** is accessible
-3. **Check network tab** for failed requests
-4. **Clear browser cache** and hard refresh (Ctrl+Shift+R)
-
----
-
-### Issue: Slow Development Server
-
-**Solutions:**
-
-1. **Clear Vite cache:**
-   ```bash
-   rm -rf node_modules/.vite
-   npm run dev
-   ```
-
-2. **Optimize dependencies** in `vite.config.js`:
-   ```javascript
-   export default defineConfig({
-     plugins: [react()],
-     optimizeDeps: {
-       include: ['react', 'react-dom']
-     }
-   })
-   ```
-
----
-
-## 🔗 Integration with Backend
-
-### API Endpoints Used
-
-The frontend communicates with these backend endpoints:
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/auth/login` | POST | User authentication |
-| `/api/v1/auth/register` | POST | User registration |
-| `/api/v1/auth/me` | GET | Get current user info |
-| `/api/v1/patients` | GET/POST | Patient management |
-| `/api/v1/patients/search` | GET | Search patients |
-| `/api/v1/triage/start` | POST | Start triage interview |
-| `/api/v1/triage/chat` | POST | Send triage messages |
-| `/api/v1/triage/{id}/note` | GET/PUT | Clinical notes |
-
-**See backend README for complete API documentation.**
-
-### Setting Up API Connection
-
-**Example API service file** (`src/services/api.js`):
-
-```javascript
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
-export const api = {
-  async login(username, password) {
-    const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    return response.json();
-  },
-  
-  async getPatients(token) {
-    const response = await fetch(`${API_BASE_URL}/api/v1/patients`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return response.json();
-  }
-};
-```
-
----
-
-## 📱 Browser Support
-
-- **Chrome**: 90+
-- **Firefox**: 88+
-- **Safari**: 14+
-- **Edge**: 90+
-
----
-
-## 🤝 Development Workflow
-
-### Recommended Workflow
-
-1. **Start Backend:**
-   ```bash
-   cd ../meditriage-be
-   uvicorn app.main:app --reload
-   ```
-
-2. **Start Frontend:**
-   ```bash
-   cd ../meditriage-fe
-   npm run dev
-   ```
-
-3. **Open Browser:**
-   - Frontend: [http://localhost:5173](http://localhost:5173)
-   - Backend Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-4. **Make Changes:**
-   - Edit React components
-   - See changes instantly with HMR
-   - Check browser console for errors
-
-5. **Test:**
-   - Use browser DevTools
-   - Check Network tab for API calls
-   - Verify authentication flows
-
----
-
-## 📄 License
-
-This project is part of the University of Peradeniya academic work.
-
----
-
-## 👥 Support
-
-For issues or questions:
-- **Backend API**: See `meditriage-be/README.md`
-- **Issues**: Open a GitHub issue
-- **Documentation**: Check inline code comments
-
----
-
-**Built with ⚛️ React + ⚡ Vite**
+**Built with React + TypeScript + Vite**

@@ -14,6 +14,7 @@ import Toast, { ToastType } from './components/ui/Toast';
 import ConfirmModal from './components/ui/ConfirmModal';
 import * as authService from './services/authService';
 import * as triageService from './services/triageService';
+import * as patientService from './services/patientService';
 import { getToken, setOnUnauthorized } from './services/api';
 
 // -- Doctor Components --
@@ -74,38 +75,82 @@ const App: React.FC = () => {
     // Load existing encounters from backend when user is authenticated
     useEffect(() => {
         if (!currentUser) return;
-        triageService.listEncounters().then(encounters => {
-            const mapped: PatientCase[] = encounters.map(enc => {
-                // Map backend status to frontend enum
-                let status = TriageStatus.IN_PROGRESS;
-                if (enc.status === 'AWAITING_REVIEW') status = TriageStatus.AWAITING_REVIEW;
-                else if (enc.status === 'COMPLETED') status = TriageStatus.COMPLETED;
-
-                return {
-                    id: enc.id,
-                    patientId: enc.patient_id,
-                    patientName: enc.patient_name,
-                    age: enc.patient_age || '',
-                    gender: enc.patient_gender || '',
-                    chiefComplaint: enc.chief_complaint || '',
-                    nurseId: '',
-                    doctorId: enc.doctor_id || undefined,
-                    doctorName: enc.doctor_name || undefined,
-                    startTime: new Date(enc.encounter_timestamp).getTime(),
-                    status,
-                    messages: [],
-                    encounterId: enc.id,
-                };
-            });
-            const sorted = mapped.sort((a, b) => b.startTime - a.startTime);
-            setCases(sorted);
-        }).catch(() => { });
+        refreshData();
+        const interval = setInterval(refreshData, 10000); // 10s poll
+        return () => clearInterval(interval);
     }, [currentUser]);
 
     /* ── Handlers ──────────────────────────────────── */
 
+    const calculateAge = (dob: string) => {
+        if (!dob) return null;
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const refreshData = async () => {
+        try {
+            const encounters = await triageService.listEncounters();
+            setCases(prevCases => {
+                const mapped: PatientCase[] = encounters.map(enc => {
+                    const existing = prevCases.find(c => c.id === enc.id);
+                    // Map backend status to frontend enum
+                    let status = TriageStatus.IN_PROGRESS;
+                    if (enc.status === 'AWAITING_REVIEW') status = TriageStatus.AWAITING_REVIEW;
+                    else if (enc.status === 'COMPLETED') status = TriageStatus.COMPLETED;
+
+                    return {
+                        id: enc.id,
+                        patientId: enc.patient_id,
+                        patientName: enc.patient_name,
+                        age: enc.patient_age || (existing ? existing.age : ''),
+                        gender: enc.patient_gender || '',
+                        chiefComplaint: enc.chief_complaint || '',
+                        nurseId: '',
+                        doctorId: enc.doctor_id || undefined,
+                        doctorName: enc.doctor_name || undefined,
+                        startTime: new Date(enc.encounter_timestamp).getTime(),
+                        status,
+                        messages: [],
+                        encounterId: enc.id,
+                    };
+                });
+
+                const sorted = mapped.sort((a, b) => b.startTime - a.startTime);
+
+                // Enrichment: Fetch missing ages in background for the new list
+                sorted.forEach(async (c) => {
+                    if (!c.age && c.patientId) {
+                        try {
+                            const p = await patientService.getPatient(c.patientId);
+                            if (p.date_of_birth) {
+                                const age = calculateAge(p.date_of_birth);
+                                if (age !== null) {
+                                    handleUpdateCase({ ...c, age: String(age) });
+                                }
+                            }
+                        } catch (err) {
+                            console.error(`Failed to enrich patient ${c.patientId}:`, err);
+                        }
+                    }
+                });
+
+                return sorted;
+            });
+        } catch (err) {
+            console.error("Failed to load encounters", err);
+        }
+    };
+
     const handleLogin = (user: User) => {
         setCurrentUser(user);
+        setShowSessionExpiredModal(false);
         navigate('/overview');
     };
 
@@ -141,8 +186,8 @@ const App: React.FC = () => {
     const handleNicProceed = (patientData: any) => {
         // Guard: Check if patient already has an active encounter (Frontend-only check)
         if (patientData.id) {
-            const hasActiveEncounter = cases.some(c => 
-                (c.patientId === patientData.id || c.patientId === undefined) && 
+            const hasActiveEncounter = cases.some(c =>
+                (c.patientId === patientData.id || c.patientId === undefined) &&
                 c.status !== TriageStatus.COMPLETED
             );
 
@@ -151,7 +196,7 @@ const App: React.FC = () => {
                 return;
             }
         }
-        
+
         setPrefillPatient(patientData);
         setShowNicModal(false);
         setShowAdmitModal(true);
@@ -210,7 +255,7 @@ const App: React.FC = () => {
             )}
 
             {/* Main Content Area */}
-            <main className={`flex-1 ml-[19rem] h-full relative overflow-y-auto ${isChatRoute ? 'pt-0' : 'pt-[80px]'}`}>
+            <main className={`flex-1 ml-[18rem] h-full relative overflow-y-auto ${isChatRoute ? 'pt-0' : 'pt-[80px]'}`}>
                 <div className="p-8">
                     <Routes>
                         {currentUser.role === UserRole.DOCTOR ? (
@@ -255,6 +300,7 @@ const App: React.FC = () => {
                                         onNavigate={(view: string) => navigate(`/${view}`)}
                                         showToast={showToast}
                                         onRemoveCase={handleRemoveCase}
+                                        onUpdateCase={handleUpdateCase}
                                     />
                                 } />
                                 <Route path="/patients" element={
@@ -263,6 +309,7 @@ const App: React.FC = () => {
                                         user={currentUser}
                                         showToast={showToast}
                                         onRemoveCase={handleRemoveCase}
+                                        onUpdateCase={handleUpdateCase}
                                     />
                                 } />
                                 <Route path="/settings" element={

@@ -9,6 +9,7 @@ interface PatientsPaneProps {
     user: User;
     showToast: (msg: string, type: ToastType) => void;
     onRemoveCase: (id: string) => void;
+    onUpdateCase?: (updatedCase: PatientCase) => void;
 }
 
 /** Status badge styling */
@@ -25,7 +26,7 @@ const getStatusInfo = (status: TriageStatus) => {
     }
 };
 
-const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onRemoveCase }) => {
+const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onRemoveCase, onUpdateCase }) => {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [genderFilter, setGenderFilter] = useState('All');
@@ -129,7 +130,10 @@ const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onR
                                 return (
                                     <tr key={c.id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer" onClick={() => handleViewPatient(c)}>
                                         <td className="p-4 text-sm font-mono text-gray-500 font-semibold">#MTP-{c.id.slice(0, 6).toUpperCase()}</td>
-                                        <td className="p-4 text-[15px] font-bold text-gray-900">{c.patientName}</td>
+                                        <td className="p-4">
+                                            <div className="text-[15px] font-bold text-gray-900">{c.patientName}</div>
+                                            <div className="text-xs text-gray-500 mt-0.5">{c.age ? `${c.age} years old` : 'Age N/A'} • {c.gender}</div>
+                                        </td>
                                         <td className="p-4">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${badge.bg} ${badge.text} border ${badge.border}`}>
                                                 <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
@@ -168,6 +172,7 @@ const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onR
                 showToast={showToast}
                 onRemoveCase={onRemoveCase}
                 userRole={user.role}
+                onUpdateCase={onUpdateCase}
             />
         </div>
     );

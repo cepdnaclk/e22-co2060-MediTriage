@@ -14,6 +14,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
+      if (!username.trim() || !password.trim()) {
+         setError('Please enter both username and password');
+         return;
+      }
+
       setIsLoading(true);
       setError('');
 
@@ -28,7 +34,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
    return (
       <div className="flex-1 min-h-screen flex items-center justify-center bg-[#dfe3ea] font-sans">
-         <div className="w-full max-w-[420px] bg-white rounded-[45px] shadow-md p-[40px] mx-4">
+         <div className="w-full max-w-[350px] bg-white rounded-[45px] shadow-md p-[25px] pb-[30px] mx-4">
 
             {/* Logo */}
             <div className="flex justify-center mb-[30px]">
@@ -52,7 +58,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                      type="text"
                      value={username}
                      onChange={(e) => setUsername(e.target.value)}
-                     className="w-full focus:ring-0 focus:ring-offset-0 focus:outline-none bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[15px] text-gray-900 text-sm transition-all outline-none placeholder-gray-400"
+                     className="w-full focus:ring-0 focus:ring-offset-0 focus:outline-none bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[12px] text-gray-900 text-sm transition-all outline-none placeholder-gray-400"
                      placeholder="Enter Hospital ID"
                   />
                </div>
@@ -62,7 +68,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                      type="password"
                      value={password}
                      onChange={(e) => setPassword(e.target.value)}
-                     className="w-full focus:ring-0 focus:ring-offset-0 focus:outline-none bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[15px] text-gray-900 text-sm transition-all outline-none placeholder-gray-400"
+                     className="w-full focus:ring-0 focus:ring-offset-0 focus:outline-none bg-[#f0f2f7] border-0 rounded-[18px] px-[20px] py-[12px] text-gray-900 text-sm transition-all outline-none placeholder-gray-400"
                      placeholder="Enter your password"
                   />
                </div>
@@ -81,7 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <button
                      type="submit"
                      disabled={isLoading}
-                     className="w-full py-4 rounded-full bg-[#17406E] text-white font-semibold text-sm hover:bg-[#1c5b7e] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                     className="w-full p-[14px] rounded-full bg-[#17406E] text-white font-semibold text-sm hover:bg-[#1c5b7e] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                      {isLoading ? 'Authenticating...' : 'Log In'}
                   </button>

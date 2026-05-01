@@ -96,8 +96,10 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
 
     // Nurse clicks "End & Report"
     const handleEndInterview = () => {
-        const hasUserMessages = messages.some(m => m.role === 'user');
-        if (!hasUserMessages) {
+        // Count how many messages are from the user
+        const userMessageCount = messages.filter(m => m.role === 'user').length;
+        
+        if (userMessageCount === 0) {
             showToast('Please collect at least one patient response before ending the interview.', 'error');
             return;
         }
@@ -216,7 +218,18 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
                 </div>
                 <div className="flex items-center gap-3">
                     <button onClick={handleCancelInterview} className="text-sm font-medium text-gray-600 hover:bg-gray-200/50 rounded-full transition-colors" style={{ border: '1px solid #cfcfcf', padding: '12px 23px' }}>Cancel</button>
-                    <button onClick={handleEndInterview} className="text-sm font-bold bg-[#17406E] text-white rounded-full hover:bg-[#1c5b7e] transition-all" style={{ border: '1px solid #17406E', padding: '12px 23px' }}>End & Report</button>
+                    <button 
+                        onClick={handleEndInterview} 
+                        disabled={!messages.some(m => m.role === 'user')}
+                        className={`text-sm font-bold rounded-full transition-all ${
+                            messages.some(m => m.role === 'user') 
+                                ? 'bg-[#17406E] text-white hover:bg-[#1c5b7e]' 
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                        style={{ border: '1px solid transparent', padding: '12px 23px' }}
+                    >
+                        End & Report
+                    </button>
                 </div>
             </div>
 

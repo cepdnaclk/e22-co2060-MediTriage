@@ -75,11 +75,11 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, queueCount }) => {
   return (
     <>
       <aside
-        className="w-72 bg-white flex flex-col fixed z-50 font-sans animate-slide-in-left"
+        className="w-[17rem] bg-white flex flex-col fixed z-50 font-sans animate-slide-in-left"
         style={{ margin: '20px', height: '-webkit-fill-available', borderRadius: '35px', boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.05)' }}
       >
         <div style={{ height: '-webkit-fill-available', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div className="p-8" style={{ paddingTop: '40px' }}>
+          <div className="p-8 pt-[40px] px-[20px]">
             <div className="flex items-center justify-center" style={{ marginBottom: '40px' }}>
               <img src="/assets/branding/MediTriage.png" alt="MediTriage" className="object-contain" style={{ height: '125px' }} />
             </div>
@@ -116,26 +116,37 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, queueCount }) => {
             </nav>
           </div>
 
-          <div style={{ borderTop: '1px solid #e1e1e1', margin: '2rem', padding: '0', paddingTop: '25px' }}>
-            <div className="flex items-center" style={{ marginBottom: '30px', gap: '12px' }}>
-              <img
-                src={user.avatar || (user.role === UserRole.NURSE ? '/assets/images/Nurse.jpg' : '/assets/images/Doctor.jpg')}
-                alt={user.name}
-                style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #17406E', objectFit: 'cover' }}
-              />
-              <div className="flex-1 min-w-0" style={{ display: 'flex', gap: '3px', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
-                <p className="text-sm font-bold text-gray-900">{user.name}</p>
-                <p className="text-xs text-[#17406E] font-semibold capitalize">{user.role.toLowerCase()}</p>
+          <div style={{ borderTop: '1px solid #e1e1e1', margin: '0px 25px 25px 25px', padding: '23px 0px 0px 0px' }}>
+            <div className="flex items-center justify-between gap-2" style={{ marginBottom: '10px' }}>
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={user.avatar || (user.role === UserRole.NURSE ? '/assets/images/Nurse.jpg' : '/assets/images/Doctor.jpg')}
+                  alt={user.name}
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #17406E', objectFit: 'cover' }}
+                />
+                <div className="flex flex-col items-start justify-center min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate w-full">{user.name}</p>
+                  <p className="text-xs text-[#17406E] font-semibold capitalize opacity-70">{user.role.toLowerCase()}</p>
+                </div>
               </div>
+
+              <button
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="group flex items-center bg-[#f2f5f8] hover:bg-[#fee2e2] text-gray-500 hover:text-red-500 rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden h-10 w-10 hover:w-[105px] shrink-0 shadow-sm"
+              >
+                <div className="flex items-center gap-2.5 px-[11px]">
+                  <svg
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    className="w-[18px] h-[18px] shrink-0"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">Logout</span>
+                </div>
+              </button>
             </div>
-            <button
-              onClick={() => setIsLogoutModalOpen(true)}
-              className="flex items-center gap-3 text-gray-500 hover:text-red-500 transition-colors w-full"
-              style={{ fontSize: '15px', fontWeight: 500, marginLeft: '4px', marginBottom: '5px' }}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '21px', height: '21px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-              Log Out
-            </button>
           </div>
         </div>
       </aside>

@@ -59,9 +59,15 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 plan: note.plan
             });
         } catch (error) {
-            console.error('Failed to fetch clinical note:', error);
-            showToast('Failed to load clinical notes', 'error');
-            setShowDiagnosisModal(false);
+            console.error('Failed to fetch clinical note, providing empty form:', error);
+            // Instead of closing the modal, provide an empty note so the doctor can still diagnose
+            setCurrentNote({
+                subjective: '',
+                objective: '',
+                assessment: '',
+                plan: ''
+            });
+            showToast('No clinical notes found. You can enter them manually.', 'info');
         } finally {
             setIsLoadingNote(false);
         }
@@ -155,14 +161,12 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
 
             {/* Recent Admissions Table */}
             <div className="animate-widget-2 bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white">
+                <div className="px-8 py-6 flex items-center justify-between bg-white">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Recent Assignments</h3>
-                        <p className="text-sm text-gray-500 mt-1">Patients assigned to your care</p>
                     </div>
-                    <button onClick={() => onNavigate('patients')} className="text-sm font-bold text-[#17406E] hover:text-[#1c5b7e] transition-colors flex items-center gap-1">
+                    <button onClick={() => onNavigate('patients')} className="px-6 py-2.5 bg-[#17406E] text-white text-xs font-bold rounded-full hover:bg-[#1c5b7e] transition-all">
                         View All
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </button>
                 </div>
 
@@ -178,11 +182,11 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50/50">
-                                    <th className="px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left rounded-tl-3xl">Patient ID</th>
-                                    <th className="px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left">Patient Name</th>
-                                    <th className="px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left">Status</th>
-                                    <th className="px-8 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right rounded-tr-3xl">Action</th>
+                                <tr className="text-xs font-extrabold text-gray-400 uppercase border-b border-gray-100">
+                                    <th className="p-4 pl-8">Patient ID</th>
+                                    <th className="p-4">Patient Name</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4 text-right pr-8">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -190,28 +194,25 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                                     const statusInfo = getStatusLabel(record.status);
                                     return (
                                         <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
-                                            <td className="px-8 py-5">
-                                                <span className="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                            <td className="px-8 py-5 pl-6">
+                                                <span className="font-mono text-sm font-bold text-gray-500 px-2 py-1 rounded-md">
                                                     #{record.patientId?.substring(0, 8).toUpperCase() || 'NEW'}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-5 flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full bg-[#17406E]/10 text-[#17406E] flex items-center justify-center font-bold text-sm">
-                                                    {record.patientName.charAt(0)}
-                                                </div>
+                                            <td className="px-8 py-5 pl-4 flex items-center gap-3">
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-900">{record.patientName}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">{record.age} years old • {record.gender}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">{record.age ? `${record.age} years old` : 'Age N/A'} • {record.gender}</p>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-5">
+                                            <td className="px-8 py-5 pl-2">
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusInfo.bg} ${statusInfo.text}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
                                                     {statusInfo.label}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5 text-right">
-                                                <button onClick={() => handleViewClick(record)} className="px-4 py-2 text-xs font-bold text-[#17406E] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors border border-transparent">
+                                                <button onClick={() => handleViewClick(record)} className="px-[15px] py-[5px] border border-[#17406e61] rounded-full text-[13px] font-bold text-[#17406e] hover:bg-[#17406E] hover:text-white hover:border-[#17406E] transition-all">
                                                     View
                                                 </button>
                                             </td>
@@ -233,6 +234,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 onRemoveCase={onRemoveCase}
                 userRole={user.role}
                 onStartDiagnosing={handleStartDiagnosis}
+                onUpdateCase={onUpdateCase}
             />
 
             {/* Diagnosis Modal */}
@@ -243,6 +245,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 note={isLoadingNote ? null : currentNote}
                 onSave={handleSaveDiagnosis}
                 isSaving={isSaving}
+                showToast={showToast}
             />
         </div>
     );
