@@ -144,6 +144,9 @@ async def process_message(
     if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
         raise ValueError(f"Encounter is not in TRIAGE_IN_PROGRESS status.")
 
+    if encounter.deleted_at is not None:
+        raise ValueError(f"Encounter is cancelled and cannot receive new messages.")
+
     # Save patient's message
     patient_interaction = TriageInteraction(
         encounter_id=encounter.id,
@@ -211,8 +214,8 @@ async def process_message(
         )
         db.add(clinical_note)
 
-        # Update encounter status — nurse will set urgency manually
-        encounter.status = EncounterStatus.AWAITING_REVIEW
+        # Note: We keep status as TRIAGE_IN_PROGRESS here so the encounter can be cancelled.
+        # The frontend will explicitly update it to AWAITING_REVIEW upon submission.
 
         soap_note_schema = SOAPNoteSchema(
             subjective=soap_note.subjective,

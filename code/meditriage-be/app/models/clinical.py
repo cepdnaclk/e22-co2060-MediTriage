@@ -50,6 +50,7 @@ class MedicalEncounter(Base):
     # Audit Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
 
     # Relationships
     patient = relationship("Patient", back_populates="encounters")

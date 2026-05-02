@@ -2,6 +2,7 @@
 Encounter service layer.
 Business logic for medical encounters, clinical notes, and triage workflow management.
 """
+from datetime import datetime
 from uuid import UUID
 from typing import Tuple, List, Optional
 from sqlalchemy.orm import Session
@@ -40,6 +41,7 @@ def get_active_encounters(db: Session) -> List[MedicalEncounter]:
     encounters = (
         db.query(MedicalEncounter)
         .filter(MedicalEncounter.status.in_(active_statuses))
+        .filter(MedicalEncounter.deleted_at.is_(None))
         .order_by(
             MedicalEncounter.is_urgent.desc(),          # urgent first
             MedicalEncounter.encounter_timestamp.asc()  # oldest arrival first
@@ -206,15 +208,10 @@ def update_encounter(
 
 def delete_encounter(encounter_id: UUID, db: Session) -> None:
     """
-    Permanently delete an abandoned triage encounter and all its children.
+    Soft delete an abandoned triage encounter.
 
-    Only encounters in TRIAGE_IN_PROGRESS status may be deleted.
-    Encounters that are AWAITING_REVIEW or COMPLETED are active clinical
-    records and must not be removed through this path.
-
-    SQLAlchemy cascade="all, delete-orphan" on the relationships ensures
-    that all associated TriageInteraction and ClinicalNote rows are
-    automatically deleted when the parent MedicalEncounter is removed.
+    Only encounters in TRIAGE_IN_PROGRESS or AWAITING_REVIEW status 
+    (if not assigned to a doctor) may be deleted.
 
     Args:
         encounter_id: UUID of the encounter to delete
@@ -222,7 +219,7 @@ def delete_encounter(encounter_id: UUID, db: Session) -> None:
 
     Raises:
         HTTPException 404: Encounter not found
-        HTTPException 409: Encounter is not in TRIAGE_IN_PROGRESS status
+        HTTPException 409: Encounter is not in a cancellable status
     """
     encounter = db.query(MedicalEncounter).filter(
         MedicalEncounter.id == encounter_id
@@ -235,7 +232,7 @@ def delete_encounter(encounter_id: UUID, db: Session) -> None:
             detail=f"Encounter with ID {encounter_id} not found"
         )
 
-    if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
+    if encounter.status not in [EncounterStatus.TRIAGE_IN_PROGRESS, EncounterStatus.AWAITING_REVIEW]:
         logger.warning(
             f"Attempted to delete non-cancellable encounter: "
             f"id={encounter_id}, status={encounter.status.value}"
@@ -244,11 +241,21 @@ def delete_encounter(encounter_id: UUID, db: Session) -> None:
             status_code=status.HTTP_409_CONFLICT,
             detail=(
                 f"Cannot cancel encounter in '{encounter.status.value}' status. "
-                "Only TRIAGE_IN_PROGRESS encounters can be deleted."
+                "Only TRIAGE_IN_PROGRESS or unassigned AWAITING_REVIEW encounters can be deleted."
             )
         )
+        
+    if encounter.status == EncounterStatus.AWAITING_REVIEW and encounter.doctor_id is not None:
+        logger.warning(
+            f"Attempted to delete assigned encounter: "
+            f"id={encounter_id}, doctor_id={encounter.doctor_id}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot cancel an encounter that has already been assigned to a doctor."
+        )
 
-    db.delete(encounter)
+    encounter.deleted_at = datetime.utcnow()
     db.commit()
 
     logger.info(f"Encounter deleted (cancelled): id={encounter_id}")
