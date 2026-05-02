@@ -131,3 +131,9 @@ export const listEncounters = async (): Promise<EncounterListItem[]> => {
 export const deleteEncounter = async (encounterId: string): Promise<void> => {
     await api.delete(`/triage/${encounterId}`);
 };
+
+// Force finish a triage interview and generate the clinical note (Nurse only)
+export const finishInterview = async (encounterId: string): Promise<ClinicalNoteResponse> => {
+    return api.post<ClinicalNoteResponse>(`/triage/${encounterId}/finish`);
+};
+
