@@ -205,7 +205,8 @@ def get_patient_encounter_history(patient_id: UUID, db: Session) -> List[Encount
     
     # Fetch all encounters for this patient with related data
     encounters = db.query(MedicalEncounter).filter(
-        MedicalEncounter.patient_id == patient_id
+        MedicalEncounter.patient_id == patient_id,
+        MedicalEncounter.deleted_at.is_(None)
     ).order_by(MedicalEncounter.encounter_timestamp.desc()).all()
     
     # Build summary list

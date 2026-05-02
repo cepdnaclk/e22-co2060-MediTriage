@@ -144,6 +144,9 @@ async def process_message(
     if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
         raise ValueError(f"Encounter is not in TRIAGE_IN_PROGRESS status.")
 
+    if encounter.deleted_at is not None:
+        raise ValueError(f"Encounter is cancelled and cannot receive new messages.")
+
     # Save patient's message
     patient_interaction = TriageInteraction(
         encounter_id=encounter.id,
