@@ -233,3 +233,73 @@ async def process_message(
         is_interview_complete=ai_response.is_complete,
         soap_note=soap_note_schema,
     )
+
+
+async def force_finish_interview(
+    encounter_id: UUID,
+    db: Session
+) -> ClinicalNote:
+    """
+    Forcefully finish a triage interview and generate a SOAP note,
+    regardless of whether the AI organically completed the chat.
+    """
+    encounter = db.query(MedicalEncounter).filter(
+        MedicalEncounter.id == encounter_id
+    ).first()
+
+    if not encounter:
+        raise ValueError(f"Encounter {encounter_id} not found.")
+
+    if encounter.status != EncounterStatus.TRIAGE_IN_PROGRESS:
+        raise ValueError(f"Encounter is not in TRIAGE_IN_PROGRESS status.")
+
+    if encounter.deleted_at is not None:
+        raise ValueError(f"Encounter is cancelled.")
+
+    # Check if clinical note already exists (just in case)
+    existing_note = db.query(ClinicalNote).filter(
+        ClinicalNote.encounter_id == encounter_id
+    ).first()
+
+    if existing_note:
+        return existing_note
+
+    # Build full transcript
+    interactions = db.query(TriageInteraction).filter(
+        TriageInteraction.encounter_id == encounter.id
+    ).order_by(TriageInteraction.timestamp.asc()).all()
+
+    transcript = _build_transcript(interactions)
+
+    patient = encounter.patient
+    patient_context = {
+        "age": _calculate_age(patient.date_of_birth) if patient.date_of_birth else "unknown",
+        "gender": "unknown",
+        "chief_complaint": encounter.chief_complaint or "unspecified",
+    }
+
+    pipeline = _get_pipeline()
+    logger.info(f"Force finishing interview for encounter {encounter.id}. Generating SOAP note...")
+
+    soap_note = await pipeline.generate_soap_note(
+        conversation_transcript=transcript,
+        patient_context=patient_context,
+    )
+
+    clinical_note = ClinicalNote(
+        encounter_id=encounter.id,
+        subjective=soap_note.subjective,
+        objective=soap_note.objective,
+        assessment="",
+        plan="",
+        is_finalized=False,
+        version=1,
+    )
+    db.add(clinical_note)
+    
+    # Note: We keep status as TRIAGE_IN_PROGRESS here so the encounter can be cancelled.
+    # The frontend will explicitly update it to AWAITING_REVIEW upon submission.
+    
+    db.commit()
+
+    return clinical_note

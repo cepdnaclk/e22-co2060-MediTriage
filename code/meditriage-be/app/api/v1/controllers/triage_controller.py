@@ -322,3 +322,44 @@ def update_clinical_note(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update clinical note"
         )
+
+
+@router.post("/{encounter_id}/finish", response_model=ClinicalNoteResponse)
+async def force_finish_triage(
+    encounter_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_nurse),
+):
+    """
+    Force finish a triage interview and generate the clinical note immediately.
+    Bypasses waiting for the AI to organically say [INTERVIEW_COMPLETE].
+
+    **Required Role**: Nurse
+    """
+    logger.info(f"Force finishing triage for encounter_id={encounter_id}, nurse={current_user.full_name}")
+    try:
+        note = await triage_engine.force_finish_interview(encounter_id, db)
+
+        # Build a ClinicalNoteResponse manually or just rely on the response model
+        encounter = db.query(MedicalEncounter).filter(MedicalEncounter.id == encounter_id).first()
+
+        return ClinicalNoteResponse(
+            id=note.id,
+            encounter_id=note.encounter_id,
+            subjective=note.subjective,
+            objective=note.objective,
+            assessment=note.assessment,
+            plan=note.plan,
+            is_finalized=note.is_finalized,
+            version=note.version,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
+            encounter_status=encounter.status.value if encounter else None,
+            doctor_id=encounter.doctor_id if encounter else None,
+        )
+    except ValueError as e:
+        logger.error(f"Encounter invalid for force finish: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to force finish triage: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to force finish triage")

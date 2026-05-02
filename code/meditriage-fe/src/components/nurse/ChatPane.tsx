@@ -112,28 +112,16 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
         setShowAnalyzing(true);
 
         try {
-            // First, try to get existing clinical note (AI may have already completed)
-            const note = await triageService.getClinicalNote(encounterId!);
-            setSoapData({ subjective: note.subjective || '', objective: note.objective || '' });
-        } catch {
-            // No note yet — send a final message to trigger SOAP generation
-            try {
-                const resp = await triageService.sendMessage(encounterId!, 'Please summarize my symptoms and end the interview.');
-                if (resp.is_interview_complete && resp.soap_note) {
-                    setSoapData({ subjective: resp.soap_note.subjective, objective: resp.soap_note.objective });
-                } else {
-                    // Wait briefly and try fetching note again
-                    await new Promise(r => setTimeout(r, 1500));
-                    try {
-                        const note2 = await triageService.getClinicalNote(encounterId!);
-                        setSoapData({ subjective: note2.subjective || '', objective: note2.objective || '' });
-                    } catch {
-                        setSoapData({ subjective: '', objective: '' });
-                    }
-                }
-            } catch {
-                setSoapData({ subjective: '', objective: '' });
-            }
+            // Use the new reliable force-finish endpoint
+            const note = await triageService.finishInterview(encounterId!);
+            setSoapData({ 
+                subjective: note.subjective || '', 
+                objective: note.objective || '' 
+            });
+        } catch (err) {
+            console.error('Failed to force finish triage', err);
+            showToast('Failed to generate clinical summary. Please try again.', 'error');
+            setSoapData({ subjective: '', objective: '' });
         }
 
         setTimeout(() => {
@@ -141,6 +129,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             setShowReview(true);
         }, 1500);
     };
+
 
     // Review confirmed — add patient to queue with doctor assignment
     const handleReviewConfirm = async (doctorId: string, doctorName: string, editedSubjective: string, editedObjective: string) => {
