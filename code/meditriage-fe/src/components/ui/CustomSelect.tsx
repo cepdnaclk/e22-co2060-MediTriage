@@ -34,6 +34,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange, c
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center shadow-[0px_20px_40px_-10px_rgba(0,0,0,0.05)] justify-between w-full gap-3 bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-xl px-4 py-2.5 font-bold text-gray-700 text-sm transition-all outline-none focus:ring-2 focus:ring-black/5"
         style={buttonStyle}
@@ -53,6 +54,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange, c
           {options.map((option) => (
             <button
               key={option.value}
+              type="button"
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);
