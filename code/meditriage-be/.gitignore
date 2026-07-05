@@ -60,3 +60,6 @@ versions/
 
 # Postman Collections (local testing only)
 # postman/
+
+# Media and Uploads
+media/

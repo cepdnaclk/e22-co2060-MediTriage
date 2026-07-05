@@ -383,7 +383,8 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
 
                                 <input
                                     autoFocus
-                                    className="flex-1 bg-transparent border-0 py-2 px-3 focus:ring-0 outline-none text-[15px] text-gray-900 placeholder-gray-400 disabled:bg-transparent"
+                                    className="chat-input flex-1 bg-transparent border-0 py-2 px-3 focus:ring-0 outline-none text-[15px] text-gray-900 placeholder-gray-400 disabled:bg-transparent"
+                                    style={{ outline: 'none', border: 'none' }}
                                     placeholder={isUploading ? "Uploading file..." : "Type a message..."}
                                     value={chatInput}
                                     onChange={e => setChatInput(e.target.value)}
