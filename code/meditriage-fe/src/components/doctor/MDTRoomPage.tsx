@@ -289,7 +289,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                                         </div>
                                     )}
                                     <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                        {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">Dr. {m.sender_name}</span>}
+                                        {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
                                         <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${
                                             isMe ? 'bg-[#17406E] text-white border-transparent rounded-tr-sm' : 'bg-white text-gray-800 border-gray-100 shadow-sm rounded-tl-sm'
                                         }`}>
@@ -332,7 +332,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                                     </div>
                                 )}
                                 <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                    {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">Dr. {m.sender_name}</span>}
+                                    {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
                                     <div className={`px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap rounded-2xl ${
                                         isMe ? 'bg-[#17406E] text-white rounded-tr-sm' : 'bg-white border border-gray-100 shadow-sm text-gray-800 rounded-tl-sm'
                                     }`}>
