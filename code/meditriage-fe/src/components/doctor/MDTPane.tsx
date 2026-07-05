@@ -117,19 +117,11 @@ const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast }) => {
                         </svg>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">No MDT conferences found</h3>
-                    <p className="text-gray-500 mb-6 max-w-md">
+                    <p className="text-gray-500 max-w-md">
                         {search || statusFilter !== 'All' 
                             ? "Try adjusting your filters to find what you're looking for."
                             : "You haven't participated in any MDT conferences yet."}
                     </p>
-                    {!search && statusFilter === 'All' && (
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-[#17406E]/10 text-[#17406E] hover:bg-[#17406E]/20 px-6 py-2.5 rounded-full font-bold transition-colors"
-                        >
-                            Start your first conference
-                        </button>
-                    )}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
