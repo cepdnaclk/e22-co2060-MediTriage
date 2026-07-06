@@ -1,12 +1,18 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.compiler import compiles
 from app.models.base import Base
 # Make sure all models are imported so their tables are registered on Base.metadata
 from app.models.user import User
 from app.models.auth import Auth
 from app.models.patient import Patient
 from app.models.clinical import MedicalEncounter, TriageInteraction, ClinicalNote
+
+@compiles(PG_UUID, "sqlite")
+def compile_uuid_sqlite(element, compiler, **kw):
+    return "CHAR(36)"
 
 @pytest.fixture(name="db_session")
 def fixture_db_session():
@@ -23,3 +29,4 @@ def fixture_db_session():
         yield db
     finally:
         db.close()
+
