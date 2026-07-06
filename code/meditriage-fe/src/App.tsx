@@ -21,6 +21,8 @@ import { getToken, setOnUnauthorized } from './services/api';
 import DoctorOverviewPane from './components/doctor/OverviewPane';
 import DoctorPatientsPane from './components/doctor/PatientsPane';
 import DoctorSettingsPane from './components/doctor/SettingsPane';
+import MDTPane from './components/doctor/MDTPane';
+import MDTRoomPage from './components/doctor/MDTRoomPage';
 
 const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -47,7 +49,7 @@ const App: React.FC = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const isChatRoute = location.pathname.startsWith('/chat');
+    const isChatRoute = location.pathname.startsWith('/chat') || /^\/mdt\/.+/.test(location.pathname);
 
     // Check for existing JWT on mount
     useEffect(() => {
@@ -285,6 +287,18 @@ const App: React.FC = () => {
                                         user={currentUser}
                                         onLogout={handleLogout}
                                         onUpdateUser={handleUpdateUser}
+                                        showToast={showToast}
+                                    />
+                                } />
+                                <Route path="/mdt" element={
+                                    <MDTPane
+                                        user={currentUser}
+                                        showToast={showToast}
+                                    />
+                                } />
+                                <Route path="/mdt/:roomId" element={
+                                    <MDTRoomPage
+                                        user={currentUser}
                                         showToast={showToast}
                                     />
                                 } />

@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
     LOG_FILE: str = "logs/meditriage.log"
 
+    # Consultation Chat Room
+    CONSULTATION_ENCRYPTION_KEY: str = ""
+    CONSULTATION_MEDIA_PATH: str = "media/consultations"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

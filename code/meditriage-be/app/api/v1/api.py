@@ -7,6 +7,7 @@ from app.api.v1.controllers import (
     triage_controller,
     patient_controller,
     user_controller,
+    consultation_controller,
 )
 
 api_router = APIRouter()
@@ -16,3 +17,4 @@ api_router.include_router(auth_controller.router)
 api_router.include_router(triage_controller.router)
 api_router.include_router(patient_controller.router)
 api_router.include_router(user_controller.router)
+api_router.include_router(consultation_controller.router)

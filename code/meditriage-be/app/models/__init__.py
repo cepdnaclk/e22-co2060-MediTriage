@@ -13,6 +13,14 @@ from .clinical import (
     EncounterStatus,
     SenderType
 )
+from .consultation import (
+    ConsultationRoom,
+    RoomMembership,
+    ConsultationMessage,
+    ConsultationAttachment,
+    RoomStatus,
+    MessageType
+)
 
 __all__ = [
     "Base",
@@ -25,4 +33,10 @@ __all__ = [
     "ClinicalNote",
     "EncounterStatus",
     "SenderType",
+    "ConsultationRoom",
+    "RoomMembership",
+    "ConsultationMessage",
+    "ConsultationAttachment",
+    "RoomStatus",
+    "MessageType",
 ]

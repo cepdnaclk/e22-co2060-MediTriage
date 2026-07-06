@@ -87,3 +87,43 @@ export interface EncounterSummary {
     nurse_name: string;
     doctor_name: string | null;
 }
+
+export type MDTRoomStatus = 'OPEN' | 'CLOSED';
+export type MDTMessageType = 'TEXT' | 'SYSTEM' | 'ATTACHMENT';
+
+export interface MDTMember {
+    doctor_id: string;
+    full_name: string;
+    license_number: string | null;
+    joined_at: string;
+    is_active: boolean;
+}
+
+export interface MDTAttachmentMeta {
+    id: string;
+    original_filename: string;
+    mime_type: string;
+    file_size_bytes: number;
+}
+
+export interface MDTMessage {
+    id: string;
+    room_id: string;
+    sender_id: string | null;
+    sender_name: string | null;
+    content: string;
+    message_type: MDTMessageType;
+    created_at: string;
+    attachment?: MDTAttachmentMeta | null;
+}
+
+export interface MDTRoom {
+    id: string;
+    title: string;
+    status: MDTRoomStatus;
+    encounter_id: string;
+    created_at: string;
+    member_count: number;
+    created_by?: MDTMember;
+    members?: MDTMember[];
+}
