@@ -56,7 +56,7 @@ Thumbs.db
 htmlcov/
 
 # Alembic
-versions/
+# versions/ is intentionally not ignored so migrations can be committed and deployed
 
 # Postman Collections (local testing only)
 # postman/
