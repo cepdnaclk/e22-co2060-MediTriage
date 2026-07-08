@@ -27,34 +27,49 @@ branch_labels = None
 depends_on = None
 
 
+def check_type_exists(typename: str) -> bool:
+    """Check if a PostgreSQL type already exists in the schema."""
+    connection = op.get_bind()
+    result = connection.execute(
+        sa.text(f"SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = '{typename}')")
+    )
+    return result.scalar()
+
+
 def upgrade() -> None:
     # ── ENUM TYPES ──────────────────────────────────────────────────────────
-    userrole_enum = postgresql.ENUM('NURSE', 'DOCTOR', 'ADMIN', name='userrole', create_type=False)
-    userrole_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('userrole'):
+        userrole_enum = postgresql.ENUM('NURSE', 'DOCTOR', 'ADMIN', name='userrole')
+        userrole_enum.create(op.get_bind())
 
-    gender_enum = postgresql.ENUM('MALE', 'FEMALE', 'PREFER_NOT_TO_SAY', name='gender', create_type=False)
-    gender_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('gender'):
+        gender_enum = postgresql.ENUM('MALE', 'FEMALE', 'PREFER_NOT_TO_SAY', name='gender')
+        gender_enum.create(op.get_bind())
 
-    encounterstatus_enum = postgresql.ENUM(
-        'TRIAGE_IN_PROGRESS', 'AWAITING_REVIEW', 'COMPLETED',
-        name='encounterstatus', create_type=False
-    )
-    encounterstatus_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('encounterstatus'):
+        encounterstatus_enum = postgresql.ENUM(
+            'TRIAGE_IN_PROGRESS', 'AWAITING_REVIEW', 'COMPLETED',
+            name='encounterstatus'
+        )
+        encounterstatus_enum.create(op.get_bind())
 
-    sendertype_enum = postgresql.ENUM('AI', 'PATIENT', 'NURSE', name='sendertype', create_type=False)
-    sendertype_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('sendertype'):
+        sendertype_enum = postgresql.ENUM('AI', 'PATIENT', 'NURSE', name='sendertype')
+        sendertype_enum.create(op.get_bind())
 
-    roomstatus_enum = postgresql.ENUM('OPEN', 'CLOSED', name='roomstatus', create_type=False)
-    roomstatus_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('roomstatus'):
+        roomstatus_enum = postgresql.ENUM('OPEN', 'CLOSED', name='roomstatus')
+        roomstatus_enum.create(op.get_bind())
 
-    messagetype_enum = postgresql.ENUM('TEXT', 'SYSTEM', 'ATTACHMENT', name='messagetype', create_type=False)
-    messagetype_enum.create(op.get_bind(), checkfirst=True)
+    if not check_type_exists('messagetype'):
+        messagetype_enum = postgresql.ENUM('TEXT', 'SYSTEM', 'ATTACHMENT', name='messagetype')
+        messagetype_enum.create(op.get_bind())
 
     # ── users ────────────────────────────────────────────────────────────────
     op.create_table(
         'users',
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column('role', sa.Enum('NURSE', 'DOCTOR', 'ADMIN', name='userrole'), nullable=False),
+        sa.Column('role', sa.Enum('NURSE', 'DOCTOR', 'ADMIN', name='userrole', create_type=False), nullable=False),
         sa.Column('license_number', sa.String(50), nullable=True),
         sa.Column('full_name', sa.String(255), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -86,7 +101,7 @@ def upgrade() -> None:
         sa.Column('first_name', sa.String(100), nullable=False),
         sa.Column('last_name', sa.String(100), nullable=False),
         sa.Column('date_of_birth', sa.Date(), nullable=False),
-        sa.Column('gender', sa.Enum('MALE', 'FEMALE', 'PREFER_NOT_TO_SAY', name='gender'), nullable=True),
+        sa.Column('gender', sa.Enum('MALE', 'FEMALE', 'PREFER_NOT_TO_SAY', name='gender', create_type=False), nullable=True),
         sa.Column('contact_number', sa.String(20), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
@@ -100,7 +115,7 @@ def upgrade() -> None:
         sa.Column('patient_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('patients.id'), nullable=False),
         sa.Column('nurse_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=False),
         sa.Column('doctor_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=True),
-        sa.Column('status', sa.Enum('TRIAGE_IN_PROGRESS', 'AWAITING_REVIEW', 'COMPLETED', name='encounterstatus'), nullable=False),
+        sa.Column('status', sa.Enum('TRIAGE_IN_PROGRESS', 'AWAITING_REVIEW', 'COMPLETED', name='encounterstatus', create_type=False), nullable=False),
         sa.Column('is_urgent', sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column('chief_complaint', sa.String(500), nullable=True),
         sa.Column('encounter_timestamp', sa.DateTime(), nullable=False),
@@ -117,7 +132,7 @@ def upgrade() -> None:
         'triage_interactions',
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column('encounter_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('medical_encounters.id'), nullable=False),
-        sa.Column('sender_type', sa.Enum('AI', 'PATIENT', 'NURSE', name='sendertype'), nullable=False),
+        sa.Column('sender_type', sa.Enum('AI', 'PATIENT', 'NURSE', name='sendertype', create_type=False), nullable=False),
         sa.Column('message_content', sa.Text(), nullable=False),
         sa.Column('audio_url', sa.String(500), nullable=True),
         sa.Column('transcription_confidence', sa.Float(), nullable=True),
@@ -149,7 +164,7 @@ def upgrade() -> None:
         sa.Column('encounter_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('medical_encounters.id'), nullable=False),
         sa.Column('created_by_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=False),
         sa.Column('title', sa.String(255), nullable=False),
-        sa.Column('status', sa.Enum('OPEN', 'CLOSED', name='roomstatus'), nullable=False),
+        sa.Column('status', sa.Enum('OPEN', 'CLOSED', name='roomstatus', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.Column('closed_at', sa.DateTime(), nullable=True),
@@ -177,7 +192,7 @@ def upgrade() -> None:
         sa.Column('room_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('consultation_rooms.id'), nullable=False),
         sa.Column('sender_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=True),
         sa.Column('content', sa.Text(), nullable=False),
-        sa.Column('message_type', sa.Enum('TEXT', 'SYSTEM', 'ATTACHMENT', name='messagetype'), nullable=False),
+        sa.Column('message_type', sa.Enum('TEXT', 'SYSTEM', 'ATTACHMENT', name='messagetype', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
     )
     op.create_index('ix_consultation_messages_room_id', 'consultation_messages', ['room_id'])
