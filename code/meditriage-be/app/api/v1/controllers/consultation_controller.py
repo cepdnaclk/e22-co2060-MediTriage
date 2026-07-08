@@ -175,14 +175,14 @@ async def upload_attachment(
     return message_resp
 
 @router.get("/{room_id}/attachments/{attachment_id}")
-def download_attachment(
+async def download_attachment(
     room_id: UUID,
     attachment_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_doctor)
 ):
     """Download a decrypted attachment."""
-    file_bytes, filename, mime_type = consultation_service.download_attachment(db, current_user, room_id, attachment_id)
+    file_bytes, filename, mime_type = await consultation_service.download_attachment(db, current_user, room_id, attachment_id)
     return Response(
         content=file_bytes,
         media_type=mime_type,

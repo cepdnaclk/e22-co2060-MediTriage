@@ -34,23 +34,26 @@ class PIIScrubber:
     def __init__(self):
         settings = get_settings()
         self._ollama_available = False
-        try:
-            self.llm = ChatOllama(
-                base_url=settings.OLLAMA_BASE_URL,
-                model=settings.OLLAMA_SCRUBBER_MODEL,
-                temperature=0.0,  # deterministic for consistent redaction
-                num_predict=1024,
-            )
-            self._ollama_available = True
-            logger.info(
-                f"PIIScrubber initialized with Ollama: "
-                f"model={settings.OLLAMA_SCRUBBER_MODEL}, "
-                f"url={settings.OLLAMA_BASE_URL}"
-            )
-        except Exception as e:
-            logger.warning(
-                f"Ollama not available, falling back to regex scrubbing: {e}"
-            )
+        if settings.USE_OLLAMA:
+            try:
+                self.llm = ChatOllama(
+                    base_url=settings.OLLAMA_BASE_URL,
+                    model=settings.OLLAMA_SCRUBBER_MODEL,
+                    temperature=0.0,  # deterministic for consistent redaction
+                    num_predict=1024,
+                )
+                self._ollama_available = True
+                logger.info(
+                    f"PIIScrubber initialized with Ollama: "
+                    f"model={settings.OLLAMA_SCRUBBER_MODEL}, "
+                    f"url={settings.OLLAMA_BASE_URL}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Ollama not available, falling back to regex scrubbing: {e}"
+                )
+        else:
+            logger.info("Ollama is disabled via configuration. Using regex scrubber fallback.")
 
     async def scrub(self, text: str) -> str:
         """

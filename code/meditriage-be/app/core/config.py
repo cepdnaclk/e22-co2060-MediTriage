@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     ACTIVE_LLM: str = "DEEPSEEK"  # Toggle: DEEPSEEK | OPENAI
 
     # AI Services — Local PII Scrubbing (Ollama)
+    USE_OLLAMA: bool = True
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_SCRUBBER_MODEL: str = "llama3.2:1b"  # lightweight model for PII removal
 

@@ -23,6 +23,10 @@ database_url = os.getenv("DATABASE_URL")
 if database_url:
     # strip accidental surrounding spaces/quotes
     database_url = database_url.strip().strip('"').strip("'")
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif database_url.startswith("postgresql://") and not database_url.startswith("postgresql+psycopg2://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     config.set_main_option("sqlalchemy.url", database_url)
 
 # import your model's MetaData for 'autogenerate'

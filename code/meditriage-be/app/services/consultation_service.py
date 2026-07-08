@@ -17,6 +17,7 @@ from app.repositories import consultation_repo, encounter_repo
 from app.services import auth_service
 from app.schemas.consultation import MessageResponse, AttachmentResponse
 from app.services import encryption_service
+from app.services.storage_service import storage_service
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -209,14 +210,16 @@ async def upload_attachment(db: Session, uploader: User, room_id: UUID, file: Up
     # Encrypt bytes
     encrypted_bytes = encryption_service.encrypt_file(file_bytes)
     
-    # Save to disk
+    # Save to storage (local disk or cloud bucket)
     stored_filename = f"{uuid4().hex}.enc"
-    room_dir = os.path.join(settings.CONSULTATION_MEDIA_PATH, str(room_id))
-    os.makedirs(room_dir, exist_ok=True)
-    file_path = os.path.join(room_dir, stored_filename)
+    relative_path = f"{room_id}/{stored_filename}"
     
-    with open(file_path, 'wb') as out_file:
-        out_file.write(encrypted_bytes)
+    success = await storage_service.upload_file(relative_path, encrypted_bytes, file.content_type)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save attachment to storage."
+        )
 
     # Save to DB
     encrypted_original_name = encryption_service.encrypt(file.filename)
@@ -251,7 +254,7 @@ def get_messages(db: Session, requester: User, room_id: UUID, limit: int = 50, b
     messages = consultation_repo.get_messages(db, room_id, limit, before_id)
     return [_build_message_response(msg) for msg in messages]
 
-def download_attachment(db: Session, requester: User, room_id: UUID, attachment_id: UUID) -> Tuple[bytes, str, str]:
+async def download_attachment(db: Session, requester: User, room_id: UUID, attachment_id: UUID) -> Tuple[bytes, str, str]:
     membership = consultation_repo.get_membership(db, room_id, requester.id)
     if not membership:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member.")
@@ -260,12 +263,10 @@ def download_attachment(db: Session, requester: User, room_id: UUID, attachment_
     if not attachment or attachment.room_id != room_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attachment not found.")
 
-    file_path = os.path.join(settings.CONSULTATION_MEDIA_PATH, str(room_id), attachment.stored_filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File missing on disk.")
-
-    with open(file_path, "rb") as f:
-        encrypted_bytes = f.read()
+    relative_path = f"{room_id}/{attachment.stored_filename}"
+    encrypted_bytes = await storage_service.download_file(relative_path)
+    if encrypted_bytes is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File missing or failed to download.")
 
     decrypted_bytes = encryption_service.decrypt_file(encrypted_bytes)
     decrypted_filename = encryption_service.decrypt(attachment.original_filename)
