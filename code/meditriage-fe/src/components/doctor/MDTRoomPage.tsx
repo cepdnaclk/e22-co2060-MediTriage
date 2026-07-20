@@ -174,17 +174,21 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
     const isCreator = roomDetail.created_by?.doctor_id === user.id;
     const isClosed = roomDetail.status === 'CLOSED';
 
-    const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const getInitials = (name: string) => {
+        const cleanName = name.replace(/^Dr\.\s*/i, '');
+        return cleanName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    };
 
     return (
-        <div className="flex flex-col h-full relative bg-[#f2f2f7] animate-fade-in font-sans" style={{ margin: '-20px', height: 'calc(100vh - 15px)' }}>
+        <div className="flex flex-col h-full relative bg-[#f2f2f7] animate-fade-in font-sans">
             
             {/* Sticky Header */}
             <div className="px-6 py-4 flex justify-between items-center bg-[#f2f2f7] sticky top-0 z-20 border-b border-gray-200/50 pt-8">
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => navigate('/mdt')} 
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 transition-colors"
+                        style={{ border: '1px solid #cfcfcf' }}
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -209,7 +213,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                     <div 
                         className="flex -space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => setShowManageModal(true)}
-                        title="Manage Members"
+                        title={isCreator ? "Manage Members" : "View Members"}
                     >
                         {(roomDetail.members || []).slice(0, 3).map(m => (
                             <div key={m.doctor_id} className="w-9 h-9 rounded-full bg-white border-2 border-[#f2f2f7] text-[#17406E] flex items-center justify-center font-bold text-xs shadow-sm">
@@ -227,7 +231,8 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                     <div className="relative settings-dropdown-container">
                         <button 
                             onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-[#17406E] hover:bg-[#17406E]/10 transition-colors"
+                            style={{ border: '1px solid #cfcfcf' }}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -235,22 +240,25 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                         </button>
                         
                         {showSettingsDropdown && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-fade-in-up">
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 p-1.5 z-50 animate-fade-in-up">
                                 <button 
                                     onClick={() => { setShowSettingsDropdown(false); setShowManageModal(true); }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium"
+                                    className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-[#f0f2f7] rounded-xl font-bold transition-colors flex items-center gap-2.5"
                                 >
-                                    Manage Members
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    {isCreator ? "Manage Members" : "View Members"}
                                 </button>
                                 {isCreator && !isClosed && (
                                     <>
-                                        <div className="h-px bg-gray-100 my-1"></div>
+                                        <div className="h-px bg-gray-100 my-1 mx-2"></div>
                                         <button 
                                             onClick={() => { setShowSettingsDropdown(false); setShowCloseConfirm(true); }}
-                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium flex items-center gap-2"
+                                            className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl font-bold transition-colors flex items-center gap-2.5"
                                         >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                             </svg>
                                             Close Conference
                                         </button>
@@ -289,27 +297,27 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                                         </div>
                                     )}
                                     <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                        {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
-                                        <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${
-                                            isMe ? 'bg-[#17406E] text-white border-transparent rounded-tr-sm' : 'bg-white text-gray-800 border-gray-100 shadow-sm rounded-tl-sm'
+                                        <div className={`p-4 rounded-[20px] border flex flex-col gap-3 ${
+                                            isMe ? 'bg-[#17406E] text-white border-transparent rounded-tr-[4px]' : 'bg-white text-gray-800 border-gray-100 shadow-sm rounded-tl-[4px]'
                                         }`}>
+                                            {!isMe && <span className="block text-[13px] font-black text-[#17406E] mb-0.5 tracking-wide">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isMe ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isMe ? 'bg-white/20' : 'bg-gray-50 border border-gray-100'}`}>
                                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                     </svg>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-bold truncate max-w-[200px]">{m.attachment.original_filename}</p>
-                                                    <p className={`text-xs ${isMe ? 'text-white/70' : 'text-gray-500'}`}>
+                                                    <p className={`text-xs mt-0.5 font-medium ${isMe ? 'text-white/70' : 'text-gray-500'}`}>
                                                         {(m.attachment.file_size_bytes / 1024 / 1024).toFixed(2)} MB
                                                     </p>
                                                 </div>
                                             </div>
                                             <button 
                                                 onClick={() => handleDownload(m.attachment!.id, m.attachment!.original_filename)}
-                                                className={`w-full py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                                                    isMe ? 'bg-white text-[#17406E] hover:bg-white/90' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                className={`w-full py-2.5 mt-1 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                                                    isMe ? 'bg-white text-[#17406E] hover:bg-white/90' : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                                                 }`}
                                             >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -332,10 +340,10 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
                                     </div>
                                 )}
                                 <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                    {!isMe && <span className="text-xs font-bold text-[#17406E] mb-1 ml-1">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
-                                    <div className={`px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap rounded-2xl ${
-                                        isMe ? 'bg-[#17406E] text-white rounded-tr-sm' : 'bg-white border border-gray-100 shadow-sm text-gray-800 rounded-tl-sm'
+                                    <div className={`px-5 py-3.5 text-[15px] leading-relaxed whitespace-pre-wrap rounded-[20px] ${
+                                        isMe ? 'bg-[#17406E] text-white rounded-tr-[4px]' : 'bg-white border border-gray-100 shadow-sm text-gray-800 rounded-tl-[4px]'
                                     }`}>
+                                        {!isMe && <span className="block text-[13px] font-black text-[#17406E] mb-1.5 tracking-wide">{(m.sender_name || '').startsWith('Dr. ') ? m.sender_name : `Dr. ${m.sender_name}`}</span>}
                                         {m.content}
                                     </div>
                                 </div>
@@ -350,16 +358,16 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
             <div className="absolute bottom-0 left-0 right-0 px-0 py-[10px] pb-[15px] z-30 bg-[#f2f2f7]">
                 <div className="max-w-4xl mx-auto w-full px-4">
                     {isClosed ? (
-                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-2xl p-4 text-sm font-medium text-center flex items-center justify-center gap-2 shadow-sm">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        <div className="flex items-center justify-center bg-gray-100/80 border border-gray-200 text-gray-500 rounded-full p-3.5 shadow-sm mx-auto w-full transition-all backdrop-blur-sm mb-[5px]">
+                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
-                            This MDT conference has been closed. No new messages can be sent.
+                            <span className="text-[13px] font-bold tracking-wide uppercase text-gray-400">This conference is closed</span>
                         </div>
                     ) : (
                         <>
                             <div className={`relative flex items-center bg-white rounded-full p-2 pl-3 shadow-sm border transition-all ${
-                                isUploading ? 'border-gray-200 opacity-70' : 'border-gray-200 focus-within:ring-2 focus-within:ring-[#17406E]/20 focus-within:border-[#17406E]'
+                                isUploading ? 'border-gray-200 opacity-70' : 'border-gray-200 focus-within:ring-2 focus-within:ring-black/5 focus-within:border-black/10'
                             }`}>
                                 {/* Hidden file input */}
                                 <input 

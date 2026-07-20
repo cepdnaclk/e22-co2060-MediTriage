@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CareSetting, UserRole } from '../types';
 import CustomSelect from './ui/CustomSelect';
 
@@ -6,6 +6,8 @@ interface TopHeaderProps {
     careSetting: CareSetting;
     onCareSettingChange: (setting: CareSetting) => void;
     onAddPatient: () => void;
+    onNewConference?: () => void;
+    showNewConferenceButton?: boolean;
     userRole?: UserRole;
 }
 
@@ -19,10 +21,22 @@ const careSettingOptions = [
  * Contains the Care Setting selector and the + Add Patient button.
  * Never changes when switching panes.
  */
-const TopHeader: React.FC<TopHeaderProps> = ({ careSetting, onCareSettingChange, onAddPatient, userRole }) => {
+const TopHeader: React.FC<TopHeaderProps> = ({ careSetting, onCareSettingChange, onAddPatient, onNewConference, showNewConferenceButton, userRole }) => {
+    // Delay the visibility slightly so the CSS transition triggers even on initial page load
+    const [isButtonVisible, setIsButtonVisible] = useState(false);
+
+    useEffect(() => {
+        if (showNewConferenceButton) {
+            const timer = setTimeout(() => setIsButtonVisible(true), 50);
+            return () => clearTimeout(timer);
+        } else {
+            setIsButtonVisible(false);
+        }
+    }, [showNewConferenceButton]);
+
     return (
         <header
-            className="fixed top-0 right-0 z-40 flex items-center justify-end gap-4 animate-slide-down"
+            className="fixed top-0 right-0 z-40 flex items-center justify-end animate-slide-down"
             style={{
                 left: '0',
                 height: '90px',
@@ -52,13 +66,32 @@ const TopHeader: React.FC<TopHeaderProps> = ({ careSetting, onCareSettingChange,
             {userRole === UserRole.NURSE && (
                 <button
                     onClick={onAddPatient}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#17406E] text-white text-sm font-bold rounded-full hover:bg-[#1c5b7e] transition-all"
+                    className="ml-4 flex items-center gap-2 px-6 py-3 bg-[#17406E] text-white text-sm font-bold rounded-full hover:bg-[#1c5b7e] transition-all"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Patient
                 </button>
+            )}
+
+            {/* Primary action — New Conference (Doctors Only, MDT Pane Only) */}
+            {userRole === UserRole.DOCTOR && (
+                <div
+                    className={`transition-all duration-300 ease-in-out flex items-center overflow-hidden ${
+                        isButtonVisible ? 'max-w-[200px] opacity-100 ml-4' : 'max-w-0 opacity-0 ml-0'
+                    }`}
+                >
+                    <button
+                        onClick={onNewConference}
+                        className="flex items-center gap-2 px-6 py-3 bg-[#17406E] text-white text-sm font-bold rounded-full hover:bg-[#1c5b7e] transition-all whitespace-nowrap"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                        New Conference
+                    </button>
+                </div>
             )}
         </header>
     );
