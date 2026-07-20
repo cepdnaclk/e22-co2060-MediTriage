@@ -18,7 +18,7 @@ const SettingsPane: React.FC<SettingsPaneProps> = ({ user, onLogout, onUpdateUse
 
     const handleSaveName = async () => {
         if (!displayName.trim() || !user) {
-            showToast('Display name cannot be empty', 'error');
+            showToast('Display name is required', 'error');
             return;
         }
 
@@ -28,7 +28,7 @@ const SettingsPane: React.FC<SettingsPaneProps> = ({ user, onLogout, onUpdateUse
             if (onUpdateUser) {
                 onUpdateUser(updatedUser);
             }
-            showToast('Display name updated successfully', 'success');
+            showToast('Profile updated successfully', 'success');
         } catch (error: any) {
             showToast(error.message || 'Failed to update name', 'error');
             setDisplayName(user.name);

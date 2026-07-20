@@ -28,7 +28,7 @@ const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast }) => {
             setRooms(data);
         } catch (error) {
             console.error('Failed to fetch rooms', error);
-            showToast('Failed to load MDT conferences', 'error');
+            showToast('Unable to retrieve MDT conferences', 'error');
         } finally {
             setIsLoading(false);
         }

@@ -46,7 +46,7 @@ const DiagnosisModal: React.FC<DiagnosisModalProps> = ({ isOpen, onClose, note, 
     const handleSave = () => {
         if (!formData.assessment.trim()) {
             if (showToast) {
-                showToast('Please provide an Assessment (Diagnosis) before marking as treated.', 'error');
+                showToast('Assessment is required before marking as treated.', 'error');
             } else {
                 alert('Please provide an Assessment (Diagnosis) before marking as treated.');
             }

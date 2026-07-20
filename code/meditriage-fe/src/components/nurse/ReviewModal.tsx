@@ -56,7 +56,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
           setDoctorOptions(options);
         })
         .catch(() => {
-          showToast("Failed to load doctors", "error");
+          showToast("Unable to retrieve doctor list", "error");
         })
         .finally(() => setLoadingDoctors(false));
     }
@@ -64,12 +64,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
 
   const handleConfirm = () => {
     if (!selectedDoctor) {
-      showToast("Please assign a doctor", "error");
+      showToast("Doctor assignment is required", "error");
       return;
     }
 
     if (!editedSubjective?.trim() && !editedObjective?.trim()) {
-      showToast("Clinical summary is empty. Please ensure the interview was conducted properly.", "error");
+      showToast("Empty clinical summary. Please review interview data.", "error");
       return;
     }
 

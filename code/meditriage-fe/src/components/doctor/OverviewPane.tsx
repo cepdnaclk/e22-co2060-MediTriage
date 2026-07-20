@@ -67,7 +67,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 assessment: '',
                 plan: ''
             });
-            showToast('No clinical notes found. You can enter them manually.', 'info');
+            showToast('No clinical notes available. Manual entry is permitted.', 'info');
         } finally {
             setIsLoadingNote(false);
         }
@@ -81,7 +81,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                 is_finalized: true,
                 ...noteData
             });
-            showToast('Diagnosis saved and patient treated', 'success');
+            showToast('Diagnosis saved. Patient marked as treated.', 'success');
             setShowDiagnosisModal(false);
 
             // Update local state immediately without waiting for poll
@@ -91,7 +91,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
             });
         } catch (error) {
             console.error('Failed to save diagnosis:', error);
-            showToast('Failed to save diagnosis', 'error');
+            showToast('Unable to save diagnosis', 'error');
         } finally {
             setIsSaving(false);
         }

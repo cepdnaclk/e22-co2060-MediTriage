@@ -194,7 +194,7 @@ const App: React.FC = () => {
             );
 
             if (hasActiveEncounter) {
-                showToast('This patient already has an active session. Please cancel the existing session before starting a new one.', 'error');
+                showToast('Active session detected. Please close the existing session first.', 'error');
                 return;
             }
         }

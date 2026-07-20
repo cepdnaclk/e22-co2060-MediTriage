@@ -18,7 +18,7 @@ const DoctorSettingsPane: React.FC<DoctorSettingsPaneProps> = ({ user, onLogout,
 
     const handleSaveDisplayName = async () => {
         if (!displayName.trim()) {
-            showToast('Display name cannot be empty', 'error');
+            showToast('Display name is required', 'error');
             return;
         }
 
@@ -28,7 +28,7 @@ const DoctorSettingsPane: React.FC<DoctorSettingsPaneProps> = ({ user, onLogout,
             if (onUpdateUser) {
                 onUpdateUser(updatedUser);
             }
-            showToast('Display name updated successfully', 'success');
+            showToast('Profile updated successfully', 'success');
         } catch (error: any) {
             showToast(error.message || 'Failed to update name', 'error');
             // Revert on failure
