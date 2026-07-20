@@ -88,7 +88,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
                 }, 2500);
             }
         } catch (err) {
-            showToast('Failed to send message', 'error');
+            showToast('Unable to send message', 'error');
         } finally {
             setIsTyping(false);
         }
@@ -100,7 +100,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
         const userMessageCount = messages.filter(m => m.role === 'user').length;
         
         if (userMessageCount === 0) {
-            showToast('Please collect at least one patient response before ending the interview.', 'error');
+            showToast('Insufficient data. At least one patient response is required.', 'error');
             return;
         }
         setShowEndConfirm(true);
@@ -120,7 +120,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             });
         } catch (err) {
             console.error('Failed to force finish triage', err);
-            showToast('Failed to generate clinical summary. Please try again.', 'error');
+            showToast('Unable to generate clinical summary. Please try again.', 'error');
             setSoapData({ subjective: '', objective: '' });
         }
 
@@ -169,7 +169,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
             }
         }
         setShowReview(false);
-        showToast('Patient added successfully', 'success');
+        showToast('Patient successfully added', 'success');
         navigate('/overview');
     };
 

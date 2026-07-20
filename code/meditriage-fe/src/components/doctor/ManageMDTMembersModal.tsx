@@ -39,7 +39,7 @@ const ManageMDTMembersModal: React.FC<ManageMDTMembersModalProps> = ({
             const doctors = await triageService.getDoctors();
             setAllDoctors(doctors);
         } catch (error) {
-            showToast('Failed to load doctors list', 'error');
+            showToast('Unable to retrieve doctor list', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -49,7 +49,7 @@ const ManageMDTMembersModal: React.FC<ManageMDTMembersModalProps> = ({
         setActionLoadingId(doctorId);
         try {
             await mdtService.addMember(roomId, doctorId);
-            showToast('Doctor added successfully', 'success');
+            showToast('Member successfully added', 'success');
             onMembersChanged();
         } catch (error: any) {
             showToast(error.message || 'Failed to add doctor', 'error');
@@ -62,7 +62,7 @@ const ManageMDTMembersModal: React.FC<ManageMDTMembersModalProps> = ({
         setActionLoadingId(doctorId);
         try {
             await mdtService.removeMember(roomId, doctorId);
-            showToast('Doctor removed successfully', 'success');
+            showToast('Member successfully removed', 'success');
             onMembersChanged();
         } catch (error: any) {
             showToast(error.message || 'Failed to remove doctor', 'error');

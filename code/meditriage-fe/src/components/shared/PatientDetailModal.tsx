@@ -96,7 +96,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
         try {
             if (patient.patientId) await patientService.deletePatient(patient.patientId);
             onRemoveCase(patient.id);
-            showToast('Patient deleted', 'success');
+            showToast('Patient record deleted', 'success');
             setShowDeleteConfirm(false);
             onClose();
         } catch (err: any) {
@@ -113,7 +113,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
             setSelectedEncounterId(encounterId);
             setShowSoapNote(true);
         } catch {
-            showToast('Clinical note not available', 'error');
+            showToast('Clinical notes are currently unavailable', 'error');
         }
     };
 
@@ -138,7 +138,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
                 ...(editContact ? { contact_number: editContact } : {}),
             });
             setPatientDetails(updated);
-            showToast('Patient updated', 'success');
+            showToast('Patient record updated', 'success');
             setShowEditModal(false);
         } catch (err: any) {
             showToast(err?.message || 'Failed to update', 'error');
@@ -398,7 +398,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ isOpen, onClose
 
             <SOAPNoteModal isOpen={showSoapNote} onClose={() => setShowSoapNote(false)} note={soapNote} doctorName={soapDoctorName} onDeleteRecord={userRole === 'ADMIN' ? () => { setShowSoapNote(false); setShowDeleteRecordConfirm(true); } : undefined} />
 
-            <ConfirmModal isOpen={showDeleteRecordConfirm} title="Delete Record?" description="This will permanently delete the clinical record for this encounter." confirmLabel="Delete" isDestructive onConfirm={() => { setShowDeleteRecordConfirm(false); showToast('Patient record deletion is restricted to administrators only', 'info'); }} onCancel={() => setShowDeleteRecordConfirm(false)} />
+            <ConfirmModal isOpen={showDeleteRecordConfirm} title="Delete Record?" description="This will permanently delete the clinical record for this encounter." confirmLabel="Delete" isDestructive onConfirm={() => { setShowDeleteRecordConfirm(false); showToast('Administrator privileges are required to delete records', 'info'); }} onCancel={() => setShowDeleteRecordConfirm(false)} />
         </>
     );
 };

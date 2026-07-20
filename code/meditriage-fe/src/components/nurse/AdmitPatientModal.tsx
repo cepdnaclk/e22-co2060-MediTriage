@@ -56,23 +56,23 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
 
     const handleSubmit = async () => {
         if (!firstName.trim()) {
-            showToast('Please enter the patient\'s first name', 'error');
+            showToast('First name is required', 'error');
             return;
         }
         if (!lastName.trim()) {
-            showToast('Please enter the patient\'s last name', 'error');
+            showToast('Last name is required', 'error');
             return;
         }
         if (!dob) {
-            showToast('Please enter a valid Date of Birth', 'error');
+            showToast('Valid date of birth is required', 'error');
             return;
         }
         if (!gender) {
-            showToast('Please select a gender', 'error');
+            showToast('Gender selection is required', 'error');
             return;
         }
         if (!chiefComplaint.trim()) {
-            showToast('Please enter the Chief Complaint', 'error');
+            showToast('Chief complaint is required', 'error');
             return;
         }
 
@@ -119,7 +119,7 @@ const AdmitPatientModal: React.FC<AdmitPatientModalProps> = ({ isOpen, onClose, 
                 encounterId: interview.encounter_id,
             };
 
-            showToast('Patient admitted — starting interview', 'success');
+            showToast('Patient admitted. Initializing interview.', 'success');
             resetForm();
             onStartInterview(interview.encounter_id, newCase);
         } catch (err: any) {

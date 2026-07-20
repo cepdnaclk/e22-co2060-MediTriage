@@ -57,7 +57,7 @@ const CreateMDTRoomModal: React.FC<CreateMDTRoomModalProps> = ({ isOpen, onClose
             const doctors = await triageService.getDoctors();
             setAllDoctors(doctors.filter(d => d.id !== user.id)); // Exclude self
         } catch (error) {
-            showToast('Failed to load required data', 'error');
+            showToast('Unable to load required data', 'error');
         } finally {
             setIsLoadingData(false);
         }
@@ -76,7 +76,7 @@ const CreateMDTRoomModal: React.FC<CreateMDTRoomModalProps> = ({ isOpen, onClose
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !selectedEncounter) {
-            showToast('Please fill in required fields', 'error');
+            showToast('All required fields must be completed', 'error');
             return;
         }
 
@@ -87,7 +87,7 @@ const CreateMDTRoomModal: React.FC<CreateMDTRoomModalProps> = ({ isOpen, onClose
                 title.trim(),
                 Array.from(selectedDoctors)
             );
-            showToast('Conference created successfully', 'success');
+            showToast('MDT conference created successfully', 'success');
             onCreated(newRoom.id);
             onClose();
         } catch (error: any) {

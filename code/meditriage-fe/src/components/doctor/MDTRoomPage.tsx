@@ -42,7 +42,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
             setRoomDetail(detail);
             setMessages(history.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
         } catch (error) {
-            showToast('Failed to load conference details', 'error');
+            showToast('Unable to retrieve conference details', 'error');
             navigate('/mdt');
         } finally {
             setIsLoading(false);
@@ -77,7 +77,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
         ws.onclose = (e) => {
             if (e.code === 4002 || e.code === 4003) {
                 setRoomDetail(prev => prev ? { ...prev, status: 'CLOSED' } : null);
-                showToast('This conference has been closed.', 'info');
+                showToast('This conference is currently closed.', 'info');
             }
         };
         
@@ -107,7 +107,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
         
         // Check size (e.g. max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-            showToast('File size must be less than 10MB', 'error');
+            showToast('File size exceeds the 10MB limit', 'error');
             return;
         }
 
@@ -116,7 +116,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
             await mdtService.uploadAttachment(roomId, file);
             // Attachment is broadcast via WS, no need to manually append
         } catch (error) {
-            showToast('Failed to upload file', 'error');
+            showToast('Unable to upload file', 'error');
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -136,7 +136,7 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         } catch (error) {
-            showToast('Failed to download file', 'error');
+            showToast('Unable to download file', 'error');
         }
     };
 
@@ -146,9 +146,9 @@ const MDTRoomPage: React.FC<MDTRoomPageProps> = ({ user, showToast }) => {
             await mdtService.closeRoom(roomId);
             setRoomDetail(prev => prev ? { ...prev, status: 'CLOSED' } : null);
             setShowCloseConfirm(false);
-            showToast('Conference closed successfully', 'success');
+            showToast('Conference successfully closed', 'success');
         } catch (error) {
-            showToast('Failed to close conference', 'error');
+            showToast('Unable to close conference', 'error');
         }
     };
 

@@ -91,7 +91,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
             });
         } catch (error) {
             console.error('Failed to fetch clinical note:', error);
-            showToast('Failed to load clinical notes', 'error');
+            showToast('Unable to retrieve clinical notes', 'error');
             setShowModal(false);
         } finally {
             setIsLoadingNote(false);
@@ -106,7 +106,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
                 is_finalized: true, // Backend automatically stamps doctor_id and sets status to COMPLETED
                 ...noteData
             });
-            showToast('Diagnosis saved and patient treated', 'success');
+            showToast('Diagnosis saved. Patient marked as treated.', 'success');
             setShowModal(false);
 
             // Update local state immediately without waiting for poll
@@ -116,7 +116,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
             });
         } catch (error) {
             console.error('Failed to save diagnosis:', error);
-            showToast('Failed to save diagnosis', 'error');
+            showToast('Unable to save diagnosis', 'error');
         } finally {
             setIsSaving(false);
         }
