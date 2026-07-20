@@ -52,7 +52,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ careSetting, onCareSettingChange,
             {userRole === UserRole.NURSE && (
                 <button
                     onClick={onAddPatient}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#17406E] text-white text-sm font-bold rounded-full hover:bg-[#1c5b7e] transition-all shadow-lg shadow-[#17406E]/20"
+                    className="flex items-center gap-2 px-6 py-3 bg-[#17406E] text-white text-sm font-bold rounded-full hover:bg-[#1c5b7e] transition-all"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

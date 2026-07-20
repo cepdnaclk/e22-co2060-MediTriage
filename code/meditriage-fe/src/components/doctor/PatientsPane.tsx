@@ -157,7 +157,7 @@ const DoctorPatientsPane: React.FC<DoctorPatientsPaneProps> = ({ cases, user, sh
                     ]} onChange={(val: string) => { setStatusFilter(val); setVisibleCount(10); }} buttonStyle={dropdownBtnStyle} />
                 </div>
 
-                <div className="w-40 flex-shrink-0">
+                <div className="w-48 flex-shrink-0">
                     <CustomSelect value={genderFilter} options={[
                         { value: 'All', label: 'All Gender' },
                         { value: 'MALE', label: 'Male' },
