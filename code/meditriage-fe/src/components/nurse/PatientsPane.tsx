@@ -102,7 +102,7 @@ const PatientsPane: React.FC<PatientsPaneProps> = ({ cases, user, showToast, onR
                 </div>
 
                 {/* Gender */}
-                <div className="w-40 flex-shrink-0">
+                <div className="w-48 flex-shrink-0">
                     <CustomSelect value={genderFilter} options={[
                         { value: 'All', label: 'All Gender' },
                         { value: 'MALE', label: 'Male' },

@@ -196,7 +196,7 @@ const DoctorOverviewPane: React.FC<DoctorOverviewPaneProps> = ({ activeCases, ca
                                         <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
                                             <td className="px-8 py-5 pl-6">
                                                 <span className="font-mono text-sm font-bold text-gray-500 px-2 py-1 rounded-md">
-                                                    #{record.patientId?.substring(0, 8).toUpperCase() || 'NEW'}
+                                                    #MTP-{record.id.slice(0, 6).toUpperCase()}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5 pl-4 flex items-center gap-3">
