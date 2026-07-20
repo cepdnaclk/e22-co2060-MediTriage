@@ -42,6 +42,7 @@ const App: React.FC = () => {
     });
 
     const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+    const [showMdtCreateModal, setShowMdtCreateModal] = useState(false);
 
     const showToast = useCallback((message: string, type: ToastType = 'info') => {
         setToast({ message, type, isVisible: true });
@@ -252,13 +253,15 @@ const App: React.FC = () => {
                     careSetting={careSetting}
                     onCareSettingChange={setCareSetting}
                     onAddPatient={handleAddPatientClick}
+                    onNewConference={() => setShowMdtCreateModal(true)}
+                    showNewConferenceButton={location.pathname === '/mdt'}
                     userRole={currentUser.role}
                 />
             )}
 
             {/* Main Content Area */}
-            <main className={`flex-1 ml-[18rem] h-full relative overflow-y-auto ${isChatRoute ? 'pt-0' : 'pt-[80px]'}`}>
-                <div className="p-8">
+            <main className={`flex-1 ml-[18rem] h-full relative ${isChatRoute ? 'overflow-hidden pt-0' : 'overflow-y-auto pt-[80px]'}`}>
+                <div className={isChatRoute ? "h-full" : "p-8"}>
                     <Routes>
                         {currentUser.role === UserRole.DOCTOR ? (
                             <>
@@ -294,6 +297,8 @@ const App: React.FC = () => {
                                     <MDTPane
                                         user={currentUser}
                                         showToast={showToast}
+                                        isCreateModalOpen={showMdtCreateModal}
+                                        onCloseCreateModal={() => setShowMdtCreateModal(false)}
                                     />
                                 } />
                                 <Route path="/mdt/:roomId" element={

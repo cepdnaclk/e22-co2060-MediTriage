@@ -192,7 +192,7 @@ const ChatPane: React.FC<ChatPaneProps> = ({ user, cases, pendingCase, onAddCase
     };
 
     return (
-        <div className="flex flex-col h-full relative bg-[#f2f2f7] animate-fade-in font-sans" style={{ margin: '-20px', height: 'calc(100vh - 15px)' }}>
+        <div className="flex flex-col h-full relative bg-[#f2f2f7] animate-fade-in font-sans">
             {/* Header */}
             <div className="px-6 py-4 pt-8 flex justify-between items-center bg-[#f2f2f7] sticky top-0 z-20">
                 <div className="flex items-center" style={{ gap: '10px' }}>

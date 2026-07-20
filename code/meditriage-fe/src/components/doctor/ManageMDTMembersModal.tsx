@@ -78,44 +78,59 @@ const ManageMDTMembersModal: React.FC<ManageMDTMembersModalProps> = ({
         d.full_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Get initials for avatar
     const getInitials = (name: string) => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const cleanName = name.replace(/^Dr\.\s*/i, '');
+        return cleanName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     };
 
     return (
-        <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="w-full max-w-md">
-            <div className="bg-white rounded-[32px] shadow-2xl flex flex-col h-[500px]">
+        <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+            <div className="bg-white rounded-[40px] shadow-2xl flex flex-col h-[500px] overflow-hidden relative">
                 {/* Header */}
-                <div className="p-6 pb-4 border-b border-gray-100 shrink-0">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">Manage Conference</h2>
-                    
-                    {/* Tabs */}
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => setActiveTab('members')}
-                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${
-                                activeTab === 'members' 
-                                    ? 'bg-[#17406E] text-white' 
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                        >
-                            Members ({members.length})
-                        </button>
-                        {isCreator && (
+                <div className="px-8 pt-6 flex justify-between items-start shrink-0">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900">{isCreator ? 'Manage Conference' : 'View Conference'}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{isCreator ? 'Add or remove doctors from this room' : 'View doctors in this room'}</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 relative -right-2.5 -top-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors shrink-0 ml-4"
+                        aria-label="Close"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Tabs */}
+                {isCreator ? (
+                    <div className="px-8 pt-6 pb-4 shrink-0 border-b border-gray-100">
+                        <div className="relative flex p-1 bg-[#f0f2f7] rounded-[14px] w-full">
+                            <div className={`absolute top-1 bottom-1 w-[calc(50%-6px)] bg-white rounded-[10px] shadow-sm border border-gray-100 transition-all duration-300 ease-in-out ${activeTab === 'members' ? 'left-1' : 'left-[calc(50%+2px)]'}`} />
+                            <button 
+                                onClick={() => setActiveTab('members')}
+                                className={`relative flex-1 py-2 text-sm font-bold rounded-[10px] transition-colors z-10 ${
+                                    activeTab === 'members' ? 'text-[#17406E]' : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                Members ({members.length})
+                            </button>
                             <button 
                                 onClick={() => setActiveTab('add')}
-                                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${
-                                    activeTab === 'add' 
-                                        ? 'bg-[#17406E] text-white' 
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                className={`relative flex-1 py-2 text-sm font-bold rounded-[10px] transition-colors z-10 ${
+                                    activeTab === 'add' ? 'text-[#17406E]' : 'text-gray-500 hover:text-gray-700'
                                 }`}
                             >
                                 Add Doctor
                             </button>
-                        )}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="px-8 pt-4 pb-4 shrink-0 flex items-center justify-between border-b border-gray-100">
+                        <span className="text-sm font-bold text-gray-900">Members ({members.length})</span>
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-2">

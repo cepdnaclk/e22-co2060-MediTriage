@@ -10,12 +10,13 @@ import CreateMDTRoomModal from './CreateMDTRoomModal';
 interface MDTPaneProps {
     user: User;
     showToast: (msg: string, type: ToastType) => void;
+    isCreateModalOpen: boolean;
+    onCloseCreateModal: () => void;
 }
 
-const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast }) => {
+const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast, isCreateModalOpen, onCloseCreateModal }) => {
     const [rooms, setRooms] = useState<MDTRoom[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [showCreateModal, setShowCreateModal] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
@@ -54,30 +55,22 @@ const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast }) => {
     const dropdownBtnStyle: React.CSSProperties = { lineHeight: '28px', borderRadius: '20px', background: 'white', padding: '10px 13px 10px 20px' };
 
     const getRelativeTime = (timestamp: string) => {
-        const diffHours = Math.floor((Date.now() - new Date(timestamp).getTime()) / (1000 * 60 * 60));
-        if (diffHours < 1) return 'Less than an hour ago';
+        const parseableTimestamp = timestamp.endsWith('Z') ? timestamp : `${timestamp}Z`;
+        const diffHours = Math.floor((Date.now() - new Date(parseableTimestamp).getTime()) / (1000 * 60 * 60));
+        if (diffHours < 1) {
+            const diffMins = Math.floor((Date.now() - new Date(parseableTimestamp).getTime()) / (1000 * 60));
+            if (diffMins < 1) return 'Just now';
+            return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+        }
         if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
         const diffDays = Math.floor(diffHours / 24);
         return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     };
 
+    const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
     return (
         <div className="animate-fade-in flex flex-col mb-12">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Multidisciplinary Team Conferences</h1>
-                    <p className="text-gray-500 mt-1">Collaborate with other doctors on patient cases</p>
-                </div>
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 bg-[#17406E] text-white px-6 py-3 rounded-full font-bold hover:bg-[#1c5b7e] transition-colors shadow-sm"
-                >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                    New Conference
-                </button>
-            </div>
 
             {/* Search + Filter Toolbar */}
             <div className="flex items-center gap-4 flex-wrap" style={{ padding: '0', margin: '-15px 0 30px' }}>
@@ -177,10 +170,10 @@ const MDTPane: React.FC<MDTPaneProps> = ({ user, showToast }) => {
                 </div>
             )}
 
-            {/* Create Modal */}
-            <CreateMDTRoomModal 
-                isOpen={showCreateModal} 
-                onClose={() => setShowCreateModal(false)}
+            {/* Create Conference Modal */}
+            <CreateMDTRoomModal
+                isOpen={isCreateModalOpen}
+                onClose={onCloseCreateModal}
                 onCreated={handleCreated}
                 showToast={showToast}
                 user={user}
