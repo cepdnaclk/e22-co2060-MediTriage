@@ -10,7 +10,7 @@ from jose import JWTError
 import json
 
 from app.api.dependencies import get_current_user, allow_doctor
-from app.db.session import get_db
+from app.db.session import get_db, SessionLocal
 from app.models.user import User
 from app.models.consultation import RoomStatus
 from app.core.security import decode_access_token
@@ -195,7 +195,7 @@ def download_attachment(
 @router.websocket("/{room_id}/ws")
 async def websocket_endpoint(websocket: WebSocket, room_id: UUID, token: str = Query(...)):
     """Real-time chat connection."""
-    db = next(get_db())
+    db = SessionLocal()
     
     # Authenticate token
     try:
@@ -249,3 +249,5 @@ async def websocket_endpoint(websocket: WebSocket, room_id: UUID, token: str = Q
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(room_id, websocket)
+    finally:
+        db.close()
