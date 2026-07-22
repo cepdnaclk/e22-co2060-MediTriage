@@ -152,15 +152,54 @@ CREATE DATABASE meditriage;
 ### Step 3: Run Migrations
 
 ```bash
-# Initialize Alembic (if not already done)
+# Generate migration from models (first time only, if no versions/ folder exists)
+alembic revision --autogenerate -m "initial_schema"
+
+# Apply migrations to create all tables
 alembic upgrade head
 ```
 
 **Verify Database:**
 ```bash
 psql -U postgres -d meditriage -c "\dt"
-# Should list tables: auth, users, patients, medical_encounters, triage_interactions, clinical_notes
+# Should list tables: auths, users, patients, medical_encounters, triage_sessions, clinical_notes
 ```
+
+### Step 4: Seed Initial Users
+
+A seed script is provided to create 5 nurse and 5 doctor accounts for testing:
+
+```bash
+psql -U postgres -d meditriage -f scripts/seed_users.sql
+```
+
+**Default Credentials (all accounts):**
+
+| Field | Value |
+|-------|-------|
+| **Password** | `SecurePass@123` |
+
+**Nurse Accounts:**
+
+| Username | Full Name |
+|----------|-----------|
+| `nurse1` | Nurse Sarah Jenkins |
+| `nurse2` | Nurse Michael Chang |
+| `nurse3` | Nurse Elena Rostova |
+| `nurse4` | Nurse David Kojo |
+| `nurse5` | Nurse Aisha Patel |
+
+**Doctor Accounts:**
+
+| Username | Full Name |
+|----------|-----------|
+| `doctor1` | Dr. Thomas Wayne |
+| `doctor2` | Dr. Lisa Cuddy |
+| `doctor3` | Dr. Gregory House |
+| `doctor4` | Dr. Allison Cameron |
+| `doctor5` | Dr. Robert Chase |
+
+> **⚠️ Important**: These are test accounts intended for development only. Remove or change credentials before deploying to production.
 
 ---
 
