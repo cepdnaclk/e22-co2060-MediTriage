@@ -54,6 +54,7 @@ Outpatient Departments (OPD) and Wards face significant bottlenecks because doct
 - **🤖 Conversational AI Triage** — A LangChain-powered interview engine guides the nurse through a clinically structured question flow, adapting dynamically to patient responses.
 - **🔒 Privacy-First Architecture** — Patient Identifiable Information (PII) is scrubbed locally using a lightweight Llama 3.2 model (via Ollama) *before* any data is sent to a cloud AI provider, ensuring patient data never leaves the facility unprotected.
 - **📝 Automated SOAP Note Generation** — Cloud AI synthesises the scrubbed conversation into a structured clinical note for doctor review.
+- **💬 Real-Time MDT Conferences** — Secure real-time collaboration rooms for Multi-Disciplinary Teams (MDT) of doctors to discuss clinical cases, share encrypted messages, and collaborate on attachments.
 - **👥 Role-Based Access Control** — Dedicated portals and permissions for Nurses, Doctors, and Administrators.
 
 ## Solution Architecture
@@ -71,21 +72,32 @@ The system follows a **layered architecture** separating human interaction, fron
 
 | Layer | Components | Description |
 |---|---|---|
-| **Human Layer** | Patient, Doctor, Nurse | End-users who interact with the system. The nurse conducts the AI-guided interview; the doctor reviews the generated SOAP note. |
-| **Frontend (React)** | Doctor Portal, Nurse App | Role-specific React (Vite) single-page applications. The Nurse App drives the triage interview; the Doctor Portal provides review and annotation capabilities. |
-| **Backend (FastAPI)** | API Gateway, LangChain Core | A Python FastAPI service exposes a RESTful API. The LangChain Core orchestrates the multi-step triage pipeline — routing queries to AI services and coordinating PII sanitisation. |
-| **External Services** | Cloud AI | Cloud AI applications are used for high-quality clinical reasoning and SOAP note generation. |
+| **Human Layer** | Patient, Doctor, Nurse | End-users who interact with the system. The nurse conducts the AI-guided interview; the doctor reviews generated SOAP notes and collaborates in MDT rooms. |
+| **Frontend (React)** | Doctor Portal, Nurse App | Role-specific React (Vite) single-page applications. The Nurse App drives the triage interview; the Doctor Portal provides SOAP note review, annotation, and MDT conference rooms. |
+| **Backend (FastAPI)** | API Gateway, Service Layer, AI Pipeline, Websocket Manager | A Python FastAPI service exposing REST and WebSocket endpoints. Core services manage users, patients, encounters, real-time chat broadcast, and AES-256 GCM encryption. The LangChain AI pipeline orchestrates sanitisation, reasoning, and output parsing. |
+| **External Services** | Cloud LLM | Cloud AI applications (DeepSeek API or OpenAI API) are used for high-quality clinical reasoning and SOAP note generation. |
 | **Local Scrubber** | Llama 3.2 (Ollama) | A locally-hosted LLM that strips PII from the patient conversation before any data reaches cloud services. |
-| **Data Layer** | PostgreSQL | Persistent storage for patients, users, triage sessions, encounters, and clinical notes managed via SQLAlchemy and Alembic migrations. |
+| **Data Layer** | PostgreSQL, Encrypted File Storage | Persistent storage for patient records, user accounts, triage sessions, and messages in PostgreSQL managed via SQLAlchemy ORM. Secure storage for uploaded attachments. |
 
 ### Data Flow
 
+#### Triage Pipeline Data Flow
+
 1. The **Nurse** admits a patient and begins an AI-guided interview in the **Nurse App**.
-2. Text or voice input is sent to the **FastAPI Backend** via the **API Gateway**.
-3. The **LangChain Core** passes the conversation to the **Local Scrubber (Llama 3.2)** to sanitise PII.
-4. The sanitised content is forwarded to **Cloud AI** for clinical reasoning.
+2. Text input is sent to the **FastAPI Backend** via the **API Gateway**.
+3. The **Triage Engine Orchestrator** in the **AI Pipeline** passes the raw conversation text to the **PII Scrubber** to sanitize patient identifiable information using local Ollama (Llama 3.2 1B).
+4. The sanitized query is forwarded to the **Cloud LLM (DeepSeek or OpenAI)** for clinical reasoning.
 5. The AI response is returned to the nurse for verification and stored in **PostgreSQL**.
 6. On completion, a draft **SOAP Note** is generated and surfaced in the **Doctor Portal** for review and annotation.
+
+#### MDT Conferences Data Flow
+
+1. A **Doctor** reviews case records in the **Doctor Portal** and initiates an **MDT Consultation Room** for collaborative discussion, specifying a title and selecting other attending doctors.
+2. The room creation request is sent via REST API to the **API Gateway**, where the **Consultation Service** creates the room in the **Data Layer (PostgreSQL)**.
+3. Doctors join the conference, establishing real-time communication channels through the **Websocket Manager** (`wss://.../ws`).
+4. Messages typed in the consultation room are encrypted dynamically using AES-256 (Fernet) via the **Encryption Service** before database insertion.
+5. Collaborative attachments uploaded by doctors are encrypted by the **Encryption Service** and stored securely in the file storage data layer, with references stored in PostgreSQL.
+6. The **Websocket Manager** broadcasts new messages and attachment notifications in real time to all connected members in the room.
 
 
 ## Software Designs
@@ -106,6 +118,8 @@ The system follows a **layered architecture** separating human interaction, fron
 | **Authentication** | JWT (python-jose) + bcrypt |
 | **Validation** | Pydantic v2 |
 | **Server** | Uvicorn (ASGI) |
+| **Encryption** | cryptography (AES-256 Fernet) |
+| **Real-time Communication** | FastAPI WebSockets |
 
 #### Frontend (`meditriage-fe`)
 
@@ -117,6 +131,7 @@ The system follows a **layered architecture** separating human interaction, fron
 | **State Management** | Zustand |
 | **HTTP Client** | Axios |
 | **Linting** | ESLint 9 |
+| **Real-time Communication** | Native WebSocket API |
 
 ### Backend Project Structure
 
@@ -124,22 +139,42 @@ The system follows a **layered architecture** separating human interaction, fron
 meditriage-be/
 ├── app/
 │   ├── api/v1/
-│   │   ├── controllers/       # Route handlers (auth, patients, triage, users)
+│   │   ├── controllers/       # Route handlers (auth, patients, triage, users, consultations)
 │   │   └── dependencies.py    # RBAC & JWT injection
-│   ├── core/                  # Config, security, logging
+│   ├── core/                  # Config, security, logging, connection_manager.py
 │   ├── db/                    # SQLAlchemy session
-│   ├── models/                # ORM models (Patient, User, Encounter, …)
-│   ├── repositories/          # Data access layer
+│   ├── models/                # ORM models (Patient, User, Encounter, consultation, …)
+│   ├── repositories/          # Data access layer (consultation_repo, etc.)
 │   ├── schemas/               # Pydantic request/response schemas
 │   ├── services/
-│   │   ├── llm/               # LangChain chains, prompts, parser
+│   │   ├── llm/               # LangChain chains, prompts, parser, and adapters
 │   │   ├── triage_engine.py   # Core triage orchestration
+│   │   ├── consultation_service.py # MDT room business logic
+│   │   ├── encryption_service.py # AES-256 encryption helper
 │   │   └── …                  # Auth, patient, encounter services
 │   └── main.py
 ├── alembic/                   # Database migrations
 ├── tests/                     # Pytest test suite
 └── requirements.txt
 ```
+
+### LLM Adapter Design (Adapter Pattern)
+
+To prevent vendor lock-in and allow seamless switching between different cloud AI models, the backend implements the **Adapter Pattern** at the LLM integration layer.
+
+<div class="figure container">
+<img class="mx-auto d-block img-fluid" src="./images/LLM-Adapter.png" alt="MediTriage LLM Adapter Design" />
+<p class="caption text-center">Figure 2 — MediTriage LLM Adapter Design</p>
+</div>
+
+#### Key Components:
+- **BaseReasoningProvider ([base_provider.py](../code/meditriage-be/app/services/llm/providers/base_provider.py))**: An abstract base class defining a unified interface (`generate_response`, `generate_structured_output`) for all reasoning providers.
+- **Provider Implementations**:
+  - **DeepSeekProvider ([deepseek_provider.py](../code/meditriage-be/app/services/llm/providers/deepseek_provider.py))**: Integrates DeepSeek's model through LangChain's OpenAI compatibility interface.
+  - **OpenAIProvider ([openai_provider.py](../code/meditriage-be/app/services/llm/providers/openai_provider.py))**: Direct OpenAI integration through LangChain.
+  - *ClaudeProvider / GeminiProvider*: Supported by design via the unified `BaseReasoningProvider` interface.
+- **Dynamic Factory Configuration ([chain_factory.py](../code/meditriage-be/app/services/llm/chain_factory.py))**: The `_create_provider()` factory function reads the `ACTIVE_LLM` setting from the `.env` configuration file to instantiate the selected provider dynamically.
+- **Loose Coupling**: The `TriagePipeline` requests the active provider from the factory and invokes methods declared in the base interface, decoupling core orchestration logic from vendor-specific libraries.
 
 ### API Endpoints Summary
 
@@ -156,6 +191,16 @@ meditriage-be/
 | | `/api/v1/triage/chat` | POST | Nurse |
 | | `/api/v1/triage/{id}/messages` | GET | Nurse, Doctor |
 | | `/api/v1/triage/{id}/note` | GET / PUT | Nurse, Doctor |
+| **MDT** | `/api/v1/consultations/rooms` | POST | Doctor |
+| | `/api/v1/consultations/rooms` | GET | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}` | GET | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}/members` | POST | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}/members/{doctor_id}` | DELETE | Doctor (Creator) |
+| | `/api/v1/consultations/rooms/{room_id}/close` | PATCH | Doctor (Creator) |
+| | `/api/v1/consultations/rooms/{room_id}/messages` | GET | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}/attachments` | POST | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}/attachments/{attachment_id}` | GET | Doctor |
+| | `/api/v1/consultations/rooms/{room_id}/ws` | WebSocket | Doctor |
 | **Users** | `/api/v1/users` | GET / DELETE | Admin |
 
 
@@ -179,7 +224,8 @@ MediTriage demonstrates how **AI-assisted clinical workflows** can meaningfully 
 Key outcomes of the project:
 
 - A fully functional triage pipeline from patient admission to SOAP note delivery, validated end-to-end.
-- A privacy-preserving AI architecture where sensitive data is sanitised before any cloud interaction.
+- A secure, real-time collaboration environment (MDT Conferences) allowing Multi-Disciplinary Teams of doctors to collaborate on cases, share encrypted messages, and upload sensitive medical files.
+- A privacy-preserving AI architecture where sensitive data is sanitised before any cloud interaction, and end-to-end AES-256 encryption is applied to clinical consultation data.
 - A role-aware web application that adapts its interface and permissions to the specific needs of Nurses, Doctors, and Administrators.
 - A modular, maintainable codebase built on industry-standard frameworks (FastAPI, React, LangChain, PostgreSQL) that can be extended to support additional clinical workflows.
 
